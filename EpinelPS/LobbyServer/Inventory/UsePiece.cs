@@ -56,7 +56,7 @@ namespace EpinelPS.LobbyServer.Inventory
                     {
                         if (spareItem != null)
                         {
-                            spareItem.Count = newSpareItemCount;
+                            spareItem.Count += newSpareItemCount;
                         }
                         else
                         {

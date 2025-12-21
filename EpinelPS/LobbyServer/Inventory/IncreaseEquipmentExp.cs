@@ -7,13 +7,16 @@ namespace EpinelPS.LobbyServer.Inventory
     [PacketPath("/inventory/increaseexpequipment")]
     public class IncreaseEquipmentExp : LobbyMsgHandler
     {
-        readonly Dictionary<int, int> boostExpTable = new()
-        {
-            { 7010001, 100 },
-            { 7010002, 1000 },
-            { 7010003, 8000 }
-        };
-        
+        // readonly Dictionary<int, int> boostExpTable = new()
+        // {
+        //     { 7010001, 100 },
+        //     { 7010002, 1000 },
+        //     { 7010003, 10000 }
+        // };
+
+        readonly Dictionary<int, int> boostExpTable = new[] { 7010001, 7010002, 7010003 }
+            .ToDictionary(id => id, id => GameData.Instance.itemMaterialTable[id].ItemValue);
+
         protected override async Task HandleAsync()
         {
             ReqIncreaseExpEquip req = await ReadData<ReqIncreaseExpEquip>();
@@ -42,19 +45,29 @@ namespace EpinelPS.LobbyServer.Inventory
             };
 
             // TODO: need reward handling function first
+            NetRewardData ret = new() { PassPoint = new() };
             if (modules > 0)
             {
                 (int t1, int t2, int t3) = CalcModules(modules);
 
+                //Console.WriteLine($"[IncreaseEquipmentExp] ÓÐÊ£Óà¾­Ñé t1 {t1}£¬t2 {t2} £¬t3 {t3} ¸ö¡£");
+
                 if (t1 > 0)
                 {
+                    RewardUtils.AddSpecifyObject(user, ref ret, 7010001, RewardType.Item, t1);
                 }
                 if (t2 > 0)
                 {
+                    RewardUtils.AddSpecifyObject(user, ref ret, 7010002, RewardType.Item, t2);
                 }
                 if (t3 > 0)
                 {
+                    RewardUtils.AddSpecifyObject(user, ref ret, 7010003, RewardType.Item, t3);
                 }
+
+
+                response.Reward = ret;
+
             }
 
             // we NEED to make sure the target item itself is in the delta list, or the UI won't update!
@@ -156,8 +169,19 @@ namespace EpinelPS.LobbyServer.Inventory
 
             return exp;
         }
-        
+
         (int t1, int t2, int t3) CalcModules(int exp)
-            => (exp / boostExpTable[7010001], exp / boostExpTable[7010002], exp / boostExpTable[7010003]);
+        {
+            int t3 = exp / boostExpTable[7010003]; // 最高面值（10000）的物品数量
+            exp -= t3 * boostExpTable[7010003];     // 剩余经验
+
+            int t2 = exp / boostExpTable[7010002]; // 次高面值（1000）的物品数量
+            exp -= t2 * boostExpTable[7010002];     // 剩余经验
+
+            int t1 = exp / boostExpTable[7010001]; // 最低面值（100）的物品数量
+
+            return (t1, t2, t3);
+        }
+
     }
 }

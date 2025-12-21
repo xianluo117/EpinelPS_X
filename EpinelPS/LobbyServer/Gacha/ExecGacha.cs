@@ -226,7 +226,7 @@ namespace EpinelPS.LobbyServer.Gacha
 
                 response.Gacha.Add(gacha);
 
-                user.AddTrigger(Trigger.GachaCharacter, 0, 0);
+                user.AddTrigger(Trigger.GachaCharacter, 1, 0);
             }
             int TicketType = req.CurrencyType;
             int currencyType = TicketType == 5100 ? (int)CurrencyType.SilverMileageTicket : (int)CurrencyType.GoldMileageTicket;

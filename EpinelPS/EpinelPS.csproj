@@ -50,6 +50,7 @@
 
 	<ItemGroup>
 		<None Include="wwwroot\admin\**" />
+		<None Remove="1114EpinelPS.rar" />
 	  <None Include="wwwroot\admin\index.html" />
 	  <None Include="wwwroot\nikke_launcher\index.html" />
 	</ItemGroup>

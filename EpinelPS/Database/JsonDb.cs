@@ -107,8 +107,54 @@ namespace EpinelPS.Database
                         c.Level = 1000;
                     }
                 }
+                //Console.WriteLine("合并重复物品");
+                user.Items = MergeItemsByType(user.Items);
             }
         }
+
+        public static List<ItemData> MergeItemsByType(List<ItemData> items)
+        {
+            var mergedDict = new Dictionary<int, ItemData>();
+
+            foreach (var item in items)
+            {
+                if (mergedDict.TryGetValue(item.ItemType, out var existingItem))
+                {
+                    // 合并已有项
+                    existingItem.Count += item.Count;
+                    existingItem.Level = Math.Max(existingItem.Level, item.Level);
+
+                    // 合并 CsnList
+                    foreach (var csn in item.CsnList)
+                    {
+                        if (!existingItem.CsnList.Contains(csn))
+                        {
+                            existingItem.CsnList.Add(csn);
+                        }
+                    }
+                }
+                else
+                {
+                    // 创建新项
+                    var newItem = new ItemData
+                    {
+                        ItemType = item.ItemType,
+                        Csn = item.Csn,
+                        Count = item.Count,
+                        Level = item.Level,
+                        Exp = item.Exp,
+                        Position = item.Position,
+                        Corp = item.Corp,
+                        Isn = item.Isn,
+                        CsnList = new List<long>(item.CsnList)
+                    };
+                    mergedDict[item.ItemType] = newItem;
+                }
+            }
+
+            return mergedDict.Values.ToList();
+        }
+
 
         public static User? GetUser(ulong id)
         {

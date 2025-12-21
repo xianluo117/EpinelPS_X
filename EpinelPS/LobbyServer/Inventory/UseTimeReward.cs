@@ -18,10 +18,11 @@ namespace EpinelPS.LobbyServer.Inventory
             User user = GetUser();
             ResUseTimeReward response = new();
 
-            ItemData timeReward = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ?? throw new InvalidDataException("cannot find time reward with isn " + req.Isn);
+            ItemData? timeReward = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ?? throw new InvalidDataException("cannot find time reward with isn " + req.Isn);
             if (req.Count > timeReward.Count) throw new Exception("count mismatch");
 
             timeReward.Count -= req.Count;
+            Console.WriteLine($"[UseTimeReward][ERROR] 物品 id {timeReward.ItemType} 使用后 {timeReward.Count} 个！");
             if (timeReward.Count == 0) user.Items.Remove(timeReward);
 
             ItemConsumeRecord? cItem = GameData.Instance.ConsumableItems
@@ -38,12 +39,14 @@ namespace EpinelPS.LobbyServer.Inventory
             };
 
             NetRewardData reward = new();
-            RewardUtils.AddSingleCurrencyObject(user, ref reward, itemType, amount);
+            Console.WriteLine($"[UseTimeReward] 请求参数 - itemType: {itemType}, 单个: {amount}，数量: {req.Count}");
+            RewardUtils.AddSingleCurrencyObject(user, ref reward, itemType, amount * req.Count);
 
             response.Reward = reward;
             // update client sIde item count
             response.Reward.UserItems.Add(NetUtils.UserItemDataToNet(timeReward));
 
+            Console.WriteLine($"[UseTimeReward][ERROR] 物品 id {timeReward.ItemType} 最后 {timeReward.Count} 个！");
             JsonDb.Save();
 
             await WriteDataAsync(response);

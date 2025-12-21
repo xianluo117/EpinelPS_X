@@ -434,5 +434,118 @@ namespace EpinelPS.Utils
 
             return ret;
         }
+
+        public static NetRewardData UseBundleBox(User user, int boxId, int count)
+        {
+            ItemConsumeRecord? cItem = GameData.Instance.ConsumableItems.Where(x => x.Value.Id == boxId).FirstOrDefault().Value ?? throw new Exception("cannot find box Id " + boxId);
+
+            if (cItem.UseType != ItemUseType.BundleBox) throw new Exception("expected Bundle box");
+
+            //Console.WriteLine($"[UseBundleBox] 获取盒子物品相关信息Id {cItem.Id} ,ItemSubType {cItem.ItemSubType} ,UseId {cItem.UseId}");
+
+            // find matching probability entries
+            BundleBoxRecord? bundleBox = GameData.Instance.BundleBoxTable.Where(x => x.Value.Id == cItem.UseId).FirstOrDefault().Value;
+            if (bundleBox == null)
+                throw new Exception($"cannot find Bundlebox record for id {cItem.UseId}");
+
+            //Console.WriteLine($"[UseBundleBox] 获取盒子里面奖励相关信息 Id{bundleBox.Id} ,UserExp {bundleBox.UserExp} ,RewardType {bundleBox.Rewards[0].RewardType} , Rewardid  {bundleBox.Rewards[0].RewardId}");
+
+            // run probability as many times as needed
+            NetRewardData ret = new() { PassPoint = new() };
+
+            for (int i = 0; i < count; i++)
+            {
+                if (bundleBox.Rewards != null)
+                {
+                    foreach (var reward in bundleBox.Rewards)
+                    {
+                        RewardUtils.AddBundleObject(user, ref ret, reward.RewardId, reward.RewardType, reward.RewardValue);
+                        //Console.WriteLine($"[UseBundleBox] 盒子奖励信息 Id{reward.RewardId} ,RewardType {reward.RewardType} , Count {reward.RewardValue}");
+                    }
+                }
+
+            }
+
+            JsonDb.Save();
+
+            return ret;
+        }
+
+        public static NetRewardData UseSelectBox(User user, int boxId, ReqUseSelectBox selectReq)
+        {
+            int count = selectReq.Select.Count;
+            // 获取选择箱配置
+            ItemConsumeRecord? cItem = GameData.Instance.ConsumableItems
+                                           .Where(x => x.Value.Id == boxId)
+                                           .FirstOrDefault().Value
+                                       ?? throw new Exception("cannot find box Id " + boxId);
+
+            NetRewardData ret = new() { PassPoint = new() };
+
+
+            // 验证物品使用类型
+            if (cItem.UseType == ItemUseType.SelectBox)
+
+            {
+                //获取选择包物品信息
+
+                ItemSelectOptionRecord? selectBox = GameData.Instance.SelectItem
+                    .Where(x => x.Value.Id == cItem.UseId).FirstOrDefault().Value;
+                if (selectBox == null)
+                    throw new Exception($"cannot find selectBox record for id {cItem.UseId}");
+
+
+                for (int i = 0; i < count; i++)
+                {
+                    //Console.WriteLine($"[UseSelectBox] 选择盒子奖励信息 Id{selectBox.Id} , 选择物品id {selectBox.SelectOption[i].SelectType} ,RewardType {selectBox.SelectOption[i].SelectType} , Count {selectBox.SelectOption[i].SelectValue}");
+
+                    int id = selectReq.Select[i].Id;
+                    int itemmun = selectReq.Select[i].Count;
+
+                    Reward_Data reward = new Reward_Data();
+                    reward.RewardType = selectBox.SelectOption[id].SelectType;
+                    reward.RewardId = selectBox.SelectOption[id].SelectId;
+                    reward.RewardValue = selectBox.SelectOption[id].SelectValue * itemmun;
+
+                    RewardUtils.AddSelectObject(user, ref ret, reward.RewardId, reward.RewardType, reward.RewardValue);
+                }
+            }
+            else if (cItem.UseType == ItemUseType.SelectBoxRowCharacter)
+            {
+                //获取选择包物品信息
+
+                // find matching probability entries
+                
+
+                ItemSelectOptionRowRecord[]? probabilityEntries = [.. GameData.Instance.SelectRowItem.Values.Where(x => x.GroupId == cItem.UseId)];
+                if (probabilityEntries.Length == 0) throw new Exception($"cannot find any probability entries with ID {cItem.UseId}, box ID: {cItem.Id}");
+
+                //Console.WriteLine($"[UseSelectBox] 自选角色 - GroupId: {cItem.UseId}, 角色数量 {probabilityEntries.Length},Id: {selectReq.Select[0].Id}");
+
+                for (int i = 0; i < count; i++)
+                {
+                    //Console.WriteLine($"[UseSelectBox] 自选角色 {selectReq.Select[i].Id}");
+
+                    ItemSelectOptionRowRecord? targetOption = probabilityEntries.FirstOrDefault(opt => opt.Id == selectReq.Select[i].Id);
+
+                    //Console.WriteLine($"[UseSelectBox] 自选角色 {targetOption.SelectId}");
+
+                    //Console.WriteLine($"[UseSelectBox] 自选角色 - Id: {selectReq.Select[i].Id}, 角色数量 {selectReq.Select[i].Count}");
+
+                    RewardUtils.AddSelectRowObject(user, ref ret, targetOption.SelectId, targetOption.SelectType, targetOption.SelectValue);
+                }
+
+
+            }
+            else
+            {
+                throw new Exception("expected select box type");
+            }
+
+            JsonDb.Save();
+            return ret;
+        }
+
+       
     }
 }

@@ -59,6 +59,7 @@ namespace EpinelPS.LobbyServer.Character
                     user.RemoveItemBySerialNumber(req.Isn, req.Count);
                     response.Items.Add(NetUtils.ToNet(bodyItem));
 
+                    user.AddTrigger(Trigger.CharacterLevelUpCount, 1);
                     JsonDb.Save();
                 }
             }

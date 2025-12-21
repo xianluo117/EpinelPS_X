@@ -33,6 +33,10 @@ namespace EpinelPS.Data
 
         public readonly Dictionary<string, FieldMapRecord> MapData = [];
 
+        [LoadRecord("ItemSelectOptionTable.json", "Id")]
+        public readonly Dictionary<int, ItemSelectOptionRecord> SelectItem = [];
+        [LoadRecord("ItemSelectOptionRowTable.json", "Id")]
+        public readonly Dictionary<int, ItemSelectOptionRowRecord> SelectRowItem = [];
         [LoadRecord("MainQuestTable.json", "Id")]
         public readonly Dictionary<int, MainQuestRecord> QuestDataRecords = [];
 
@@ -62,6 +66,8 @@ namespace EpinelPS.Data
         [LoadRecord("ItemEquipTable.json", "Id")]
 
         public readonly Dictionary<int, ItemEquipRecord> ItemEquipTable = [];
+        [LoadRecord("BundleBoxTable.json", "Id")]
+        public readonly Dictionary<int, BundleBoxRecord> BundleBoxTable = [];
 
         [LoadRecord("ItemMaterialTable.json", "Id")]
         public readonly Dictionary<int, ItemMaterialRecord> itemMaterialTable = [];
@@ -537,6 +543,43 @@ namespace EpinelPS.Data
                 Stream stream = MainZip.GetInputStream(fileEntry);
                 X[] deserializedObject = await MemoryPackSerializer.DeserializeAsync<X[]>(stream) ?? throw new Exception("failed to parse " + entry);
 
+                // 保存为 JSON 文件到程序运行目录下的 json 文件夹
+                try
+                {
+                    string jsonFileName = Path.GetFileNameWithoutExtension(entry) + ".json";
+                    string jsonFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "json");
+                    string jsonFilePath = Path.Combine(jsonFolderPath, jsonFileName);
+
+
+                    // 检查文件是否已存在
+                    if (File.Exists(jsonFilePath))
+                    {
+                        
+                    }
+                    else
+                    {
+
+                        // 确保 json 目录存在
+                        Directory.CreateDirectory(jsonFolderPath);
+
+                        string jsonContent = System.Text.Json.JsonSerializer.Serialize(deserializedObject,
+                            new JsonSerializerOptions
+                            {
+                                WriteIndented = true,
+                                IncludeFields = true,
+                                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                            });
+
+                        await File.WriteAllTextAsync(jsonFilePath, jsonContent);
+                        //Logging.WriteLine($"Saved JSON file: {jsonFilePath}", LogType.Info);
+                    }
+                }
+                catch (Exception jsonEx)
+                {
+                    Logging.WriteLine($"Failed to save JSON file: {jsonEx.Message}", LogType.Warning);
+                }
+
+
                 currentFile++;
                 bar.Report((double)currentFile / totalFiles);
 
@@ -638,6 +681,44 @@ namespace EpinelPS.Data
                 if (targetLevel == item.Level)
                 {
                     return item.Exp;
+                }
+            }
+            return -1;
+        }
+        public string? GetMapIdFromDBFieldName(string field)
+        {
+            // Get game map ID from DB Field Name (ex: 1_Normal for chapter 1 normal)
+            string[] keys = field.Split("_");
+            if (int.TryParse(keys[0], out int chapterNum))
+            {
+                string difficulty = keys[1];
+
+                foreach (KeyValuePair<int, CampaignChapterRecord> item in ChapterCampaignData)
+                {
+                    if (difficulty == "Normal" && item.Value.Chapter == chapterNum)
+                    {
+                        return item.Value.FieldId;
+                    }
+                    else if (difficulty == "Hard" && item.Value.Chapter == chapterNum)
+                    {
+                        return item.Value.HardFieldId;
+                    }
+                }
+
+                return null;
+            }
+            else
+            {
+                return keys[0]; // Already a Map ID
+            }
+        }
+        public int GetNormalChapterNumberFromFieldName(string field)
+        {
+            foreach (KeyValuePair<int, CampaignChapterRecord> item in ChapterCampaignData)
+            {
+                if (item.Value.FieldId == field)
+                {
+                    return item.Value.Chapter;
                 }
             }
             return -1;

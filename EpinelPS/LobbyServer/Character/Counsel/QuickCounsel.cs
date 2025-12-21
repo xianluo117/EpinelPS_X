@@ -67,6 +67,7 @@ namespace EpinelPS.LobbyServer.Character.Counsel
                 };
             }
 
+            user.AddTrigger(Trigger.CharacterCounsel, 1);
             JsonDb.Save();
 
             await WriteDataAsync(response);

@@ -65,6 +65,7 @@ namespace EpinelPS.LobbyServer.Character
                         user.AddTrigger(Trigger.CharacterGradeMax, 1);
                     }
 
+                    user.AddTrigger(Trigger.CharacterLevelUpCount, 1);
                     JsonDb.Save();
                 }
             }

@@ -211,8 +211,11 @@ namespace EpinelPS.Utils
             }
             else if (rewardType == RewardType.Bgm)
             {
-                if (!user.JukeboxBgm.Contains(rewardId)) user.JukeboxBgm.Add(rewardId);
-                ret.JukeboxBgm.Add(rewardId);
+                if (!user.JukeboxBgm.Contains(rewardId))
+                {
+                    ret.JukeboxBgm.Add(rewardId);
+                    user.JukeboxBgm.Add(rewardId);
+                }
             }
             else if (rewardType == RewardType.InfraCoreExp)
             {
@@ -304,6 +307,442 @@ namespace EpinelPS.Utils
             {
                 Logging.WriteLine("TODO: Reward type " + rewardType, LogType.Warning);
             }
+        }
+        /// <summary>
+        /// 添加可选择物品
+        /// </summary>
+        /// <param name="user">用户</param>
+        /// <param name="ret"></param>
+        /// <param name="rewardId">物品ID</param>
+        /// <param name="rewardType">物品类型</param>
+        /// <param name="rewardCount">物品数量</param>
+        /// <exception cref="Exception"></exception>
+        public static void AddSelectObject(User user, ref NetRewardData ret, int rewardId, RewardType rewardType, int rewardCount)
+        {
+
+            if (rewardId == 0 || rewardType == RewardType.None) return;
+
+            if (rewardType == RewardType.Item || rewardType.ToString().StartsWith("Equipment_"))
+            {
+
+                int corpId = 0; // Default to 0 (None)
+
+                if (rewardType.ToString().StartsWith("Equipment_"))
+                {
+                    var corpSetting = GameData.Instance.ItemEquipCorpSettingTable.Values.FirstOrDefault(x => x.Key == rewardType);
+
+                    if (corpSetting != null)
+                    {
+                        if (corpSetting.CorpType == CorporationType.RANDOM)
+                        {
+                            // Use weighted random selection - all corporations have equal chance
+                            // Weights: MISSILIS(1)=20%, ELYSION(2)=20%, TETRA(3)=20%, PILGRIM(4)=20%, ABNORMAL(7)=20%
+                            int[] corpIds = { 1, 2, 3, 4, 7 }; // All corporations have equal chance
+                            corpId = corpIds[Rng.Next(0, corpIds.Length)];
+                        }
+                        else
+                        {
+                            // Directly use the CorpType enum value as integer
+                            corpId = (int)corpSetting.CorpType;
+                        }
+                    }
+
+                }
+
+                // Check if user already has said item. If it is level 1, increase item count.
+                ItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
+
+                if (existingItem != null)
+                {
+
+                    Console.WriteLine($"[UseSelectBox] 发现已存在物品 Id{existingItem.ItemType}，添加到已有物品 {rewardCount} 个。");
+                    existingItem.Count += rewardCount;
+
+                    // Tell the client the reward and its amount
+                    ret.Item.Add(new NetItemData()
+                    {
+                        Count = rewardCount,
+                        Tid = rewardId,
+                        Corporation = corpId
+                    });
+
+                    // Tell the client the new amount of this item
+                    ret.UserItems.Add(new NetUserItemData()
+                    {
+                        Isn = existingItem.Isn,
+                        Tid = existingItem.ItemType,
+                        Count = existingItem.Count,
+                        Corporation = existingItem.Corp
+                    });
+                }
+                else
+                {
+                    Console.WriteLine($"[UseSelectBox] 物品 Id{rewardId} 不存在，添加新物品物品 {rewardCount} 个。");
+                    int id = user.GenerateUniqueItemId();
+                    int level = 0; // Default to 0
+                    ItemSubType itemSubType = GameData.Instance.GetItemSubType(rewardId);
+
+                    // Check if Harmony Cube set level to 1
+                    if (itemSubType == ItemSubType.HarmonyCube)
+                    {
+                        level = 1;
+                    }
+                    var newItem = new ItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = rewardCount, Corp = corpId };
+                    user.Items.Add(newItem);
+
+                    ret.Item.Add(new NetItemData()
+                    {
+                        Count = rewardCount,
+                        Tid = rewardId,
+                        Corporation = corpId
+                    });
+
+                    // Tell the client the new amount of this item
+                    ret.UserItems.Add(new NetUserItemData()
+                    {
+                        Isn = newItem.Isn,
+                        Tid = newItem.ItemType,
+                        Count = newItem.Count,
+                        Corporation = newItem.Corp
+                    });
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// 添加指定物品
+        /// </summary>
+        /// <param name="user">用户</param>
+        /// <param name="ret"></param>
+        /// <param name="rewardId">物品ID</param>
+        /// <param name="rewardType">物品类型</param>
+        /// <param name="rewardCount">物品数量</param>
+        /// <exception cref="Exception"></exception>
+        public static void AddSpecifyObject(User user, ref NetRewardData ret, int rewardId, RewardType rewardType, int rewardCount)
+        {
+            if (rewardId == 0 || rewardType == RewardType.None) return;
+
+            if (rewardType == RewardType.Item)
+            {
+
+                int corpId = 0; // Default to 0 (None)
+
+                // Check if user already has said item. If it is level 1, increase item count.
+                ItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
+
+                if (existingItem != null)
+                {
+
+                    Console.WriteLine($"[AddSpecifyObject] 发现已存在物品 Id{existingItem.ItemType}，添加到已有物品 {rewardCount} 个。");
+                    existingItem.Count += rewardCount;
+                    
+                    // Tell the client the reward and its amount
+                    ret.Item.Add(new NetItemData()
+                    {
+                        Count = rewardCount,
+                        Tid = rewardId,
+                        Corporation = corpId
+                    });
+
+                    // Tell the client the new amount of this item
+                    ret.UserItems.Add(new NetUserItemData()
+                    {
+                        Isn = existingItem.Isn,
+                        Tid = existingItem.ItemType,
+                        Count = existingItem.Count,
+                        Corporation = existingItem.Corp
+                    });
+                }
+                else
+                {
+                    Console.WriteLine($"[AddSpecifyObject] 物品 Id{rewardId} 不存在，添加新物品物品 {rewardCount} 个。");
+                    int id = user.GenerateUniqueItemId();
+                    int level = 1; // Default to 0
+
+                    var newItem = new ItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 1, Count = rewardCount, Corp = corpId };
+                    user.Items.Add(newItem);
+
+                    ret.Item.Add(new NetItemData()
+                    {
+                        Count = rewardCount,
+                        Tid = rewardId,
+                        Corporation = corpId
+                    });
+
+                    // Tell the client the new amount of this item
+                    ret.UserItems.Add(new NetUserItemData()
+                    {
+                        Isn = newItem.Isn,
+                        Tid = newItem.ItemType,
+                        Lv = newItem.Level,
+                        Exp = newItem.Exp,
+                        Count = newItem.Count,
+                        Corporation = newItem.Corp
+                    });
+                }
+            }
+
+        }
+
+
+        /// <summary>
+        /// 添加礼包物品
+        /// </summary>
+        /// <param name="user">用户</param>
+        /// <param name="ret"></param>
+        /// <param name="rewardId">物品ID</param>
+        /// <param name="rewardType">物品类型</param>
+        /// <param name="rewardCount">物品数量</param>
+        /// <exception cref="Exception"></exception>
+        public static void AddBundleObject(User user, ref NetRewardData ret, int rewardId, RewardType rewardType, int rewardCount)
+        {
+            if (rewardId == 0 || rewardType == RewardType.None) return;
+
+            if (rewardType == RewardType.Item || rewardType.ToString().StartsWith("Equipment_"))
+            {
+
+                int corpId = 0; // Default to 0 (None)
+
+                if (rewardType.ToString().StartsWith("Equipment_"))
+                {
+                    var corpSetting = GameData.Instance.ItemEquipCorpSettingTable.Values.FirstOrDefault(x => x.Key == rewardType);
+
+                    if (corpSetting != null)
+                    {
+                        if (corpSetting.CorpType == CorporationType.RANDOM)
+                        {
+                            // Use weighted random selection - all corporations have equal chance
+                            // Weights: MISSILIS(1)=20%, ELYSION(2)=20%, TETRA(3)=20%, PILGRIM(4)=20%, ABNORMAL(7)=20%
+                            int[] corpIds = { 1, 2, 3, 4, 7 }; // All corporations have equal chance
+                            corpId = corpIds[Rng.Next(0, corpIds.Length)];
+                        }
+                        else
+                        {
+                            // Directly use the CorpType enum value as integer
+                            corpId = (int)corpSetting.CorpType;
+                        }
+                    }
+
+                }
+
+                // Check if user already has said item. If it is level 1, increase item count.
+                ItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
+
+                if (existingItem != null)
+                {
+                    Console.WriteLine($"[UseBundleBox] 发现已存在物品 Id{existingItem.ItemType}，添加到已有物品 {rewardCount} 个。");
+                    existingItem.Count += rewardCount;
+
+                    // Tell the client the reward and its amount
+                    ret.Item.Add(new NetItemData()
+                    {
+                        Count = rewardCount,
+                        Tid = rewardId,
+                        Corporation = corpId
+                    });
+
+                    // Tell the client the new amount of this item
+                    ret.UserItems.Add(new NetUserItemData()
+                    {
+                        Isn = existingItem.Isn,
+                        Tid = existingItem.ItemType,
+                        Count = existingItem.Count,
+                        Corporation = existingItem.Corp
+                    });
+                }
+                else
+                {
+                    Console.WriteLine($"[UseBundleBox] 物品 Id{rewardId} 不存在，添加新物品物品 {rewardCount} 个。");
+                    int id = user.GenerateUniqueItemId();
+                    int level = 0; // Default to 0
+                    ItemSubType itemSubType = GameData.Instance.GetItemSubType(rewardId);
+
+                    // Check if Harmony Cube set level to 1
+                    if (itemSubType == ItemSubType.HarmonyCube)
+                    {
+                        level = 1;
+                    }
+                    var newItem = new ItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = rewardCount, Corp = corpId };
+                    user.Items.Add(newItem);
+
+                    ret.Item.Add(new NetItemData()
+                    {
+                        Count = rewardCount,
+                        Tid = rewardId,
+                        Corporation = corpId
+                    });
+
+                    // Tell the client the new amount of this item
+                    ret.UserItems.Add(new NetUserItemData()
+                    {
+                        Isn = newItem.Isn,
+                        Tid = newItem.ItemType,
+                        Count = newItem.Count,
+                        Corporation = newItem.Corp
+                    });
+                }
+            }
+            
+        }
+
+        public static void AddSelectRowObject(User user, ref NetRewardData ret, int characterId, RewardType rewardType, int rewardValue)
+        {
+            int totalBodyLabels = 0;
+            ret = new ();
+
+            CharacterRecord? character = GameData.Instance.CharacterTable.Where(x => x.Value.Id == characterId).FirstOrDefault().Value;
+            if (character == null)
+                throw new Exception($"cannot find character record for id {characterId}");
+
+            // Console.WriteLine($"[UseSelectBox] 自选角色 - Id: {character.Id}");
+
+            if (user.GetCharacter(characterId) is CharacterModel ownedCharacter)
+            {
+                
+                ItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
+                //Console.WriteLine($"[UseSelectBox] 角色已存在，获取碎片 - Id: {character.PieceId}");
+                // If the character already exists, we can increase its piece count
+                //如果该角色已存在，我们可以增加其碎片数量
+                int maxLimitBroken = GetValueByRarity(character.OriginalRare, 0, 2, 11)-1;
+                Console.WriteLine($"[UseSelectBox] 角色最大碎片: {maxLimitBroken}，现有碎片数量 {spareItem.Count}");
+
+
+                bool canIncreaseItem = character.OriginalRare != OriginalRareType.R && ownedCharacter.Grade + (spareItem?.Count ?? 0) < maxLimitBroken;
+
+                //Console.WriteLine($"[UseSelectBox] 是否可以增加碎片: {canIncreaseItem}");
+
+                (int newSpareItemCount, int dissoluteCharacterCount) = canIncreaseItem ? (1, 0) : (0, 1);
+                if (canIncreaseItem)
+                {
+                    if (spareItem != null)
+                    {
+                        //Console.WriteLine($"[UseSelectBox] 增加碎片: {newSpareItemCount}");
+                        spareItem.Count += newSpareItemCount;
+                    }
+                    else
+                    {
+                        //Console.WriteLine($"[UseSelectBox] 新建碎片: {newSpareItemCount}");
+                        spareItem = new()
+                        {
+                            ItemType = character.PieceId,
+                            Csn = 0,
+                            Count = newSpareItemCount,
+                            Level = 0,
+                            Exp = 0,
+                            Position = 0,
+                            Corp = 0,
+                            Isn = user.GenerateUniqueItemId()
+                        };
+                        user.Items.Add(spareItem);
+                    }
+
+                    ret.Item.Add(new NetItemData()
+                    {
+                        Count = spareItem.Count,
+                        Tid = spareItem.ItemType,
+                        Corporation = spareItem.Corp
+                    });
+
+
+                    //ret.UserItems.Add(NetUtils.UserItemDataToNet(spareItem));
+                    //ret.Character.Add(GetNetCharacterData(ownedCharacter));
+
+                    // Tell the client the new amount of this item
+                    ret.UserItems.Add(new NetUserItemData()
+                    {
+                        Isn = spareItem.Isn,
+                        Tid = spareItem.ItemType,
+                        Count = spareItem.Count,
+                        Corporation = spareItem.Corp
+                    });
+                }
+                else
+                {
+                    // If we cannot increase the item, we give body label instead
+                    //如果无法增加项目，我们改为提供主体标签
+                   
+                    int bodyLabel = GetValueByRarity(character.OriginalRare, 150, 200, 6000);
+
+                    //Console.WriteLine($"[UseSelectBox] 碎片数量已满，只能加主体标签: {bodyLabel} 个");
+
+                    totalBodyLabels += bodyLabel * dissoluteCharacterCount;
+                    ret.Character.Add(GetNetCharacterData(ownedCharacter, bodyLabel));
+                    ret.Currency.Add(new NetCurrencyData() { Type = (int)CurrencyType.DissolutionPoint, Value = totalBodyLabels });
+                    user.AddCurrency(CurrencyType.DissolutionPoint, totalBodyLabels);
+                }
+            }
+            else
+            {
+                //Console.WriteLine($"[UseSelectBox] 角色不存在，添加角色。");
+                int csn = user.GenerateUniqueCharacterId();
+                ret.UserCharacters.Add(new NetUserCharacterDefaultData
+                {
+                    CostumeId = 0,
+                    Csn = csn,
+                    Grade = 0,
+                    Lv = 1,
+                    Skill1Lv = 1,
+                    Skill2Lv = 1,
+                    Tid = character.Id,
+                    UltiSkillLv = 1
+                });
+                ret.Character.Add(new NetCharacterData
+                {
+                    Csn = user.GenerateUniqueCharacterId(),
+                    Tid = character.Id,
+                });
+                user.Characters.Add(new CharacterModel
+                {
+                    CostumeId = 0,
+                    Csn = csn,
+                    Grade = 0,
+                    Level = 1,
+                    Skill1Lvl = 1,
+                    Skill2Lvl = 1,
+                    Tid = character.Id,
+                    UltimateLevel = 1
+                });
+
+                // Add "New Character" Badge
+                user.AddBadge(BadgeContents.NikkeNew, character.NameCode.ToString());
+                user.AddTrigger(Trigger.ObtainCharacter, 1, character.NameCode);
+                if (character.OriginalRare == OriginalRareType.SR)
+                {
+                    user.AddTrigger(Trigger.ObtainCharacterSSR, 1);
+                }
+                else
+                {
+                    user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                }
+
+                if (character.OriginalRare == OriginalRareType.SSR || character.OriginalRare == OriginalRareType.SR)
+                {
+                    user.BondInfo.Add(new() { NameCode = character.NameCode, Lv = 1 });
+                }
+            }
+
+           
+            
+        }
+
+        public static int GetValueByRarity(OriginalRareType rarity, int rValue, int srValue, int ssrValue) => rarity switch
+        {
+            OriginalRareType.R => rValue,
+            OriginalRareType.SR => srValue,
+            OriginalRareType.SSR => ssrValue,
+            _ => throw new Exception($"Unknown character rarity: {rarity}")
+        };
+
+        public static NetCharacterData GetNetCharacterData(CharacterModel character, int bodyLabel = 0)
+        {
+            return new NetCharacterData
+            {
+                Csn = character.Csn,
+                Tid = character.Tid,
+                PieceCount = bodyLabel == 0 ? 1 : 0,
+                CurrencyValue = bodyLabel
+            };
         }
     }
 }
