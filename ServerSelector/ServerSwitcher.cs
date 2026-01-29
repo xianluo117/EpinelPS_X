@@ -94,9 +94,15 @@ public class ServerSwitcher
                 endIdx = txt.IndexOf(endIndexStr) + endIndexStr.Length;
             }
 
+            if (startIdx < 0)
+            {
+                startIdx = 0;
+            }
+
+
             txt = string.Concat(txt.AsSpan(0, startIdx), txt.AsSpan(endIdx));
 
-
+           
             await File.WriteAllTextAsync(hostsFilePath, txt);
         }
         catch

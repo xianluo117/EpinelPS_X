@@ -6,7 +6,9 @@ using EpinelPS.Database;
 using EpinelPS.Utils;
 using ICSharpCode.SharpZipLib.Zip;
 using MemoryPack;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Encodings.Web;
+
 
 namespace EpinelPS.Data
 {
@@ -273,6 +275,10 @@ namespace EpinelPS.Data
 
         [LoadRecord("LoginEventTable.json", "Id")]
         public readonly Dictionary<int, LoginEventRecord> LoginEventTable = [];
+
+        //Profile Card Object Table
+        [LoadRecord("ProfileCardObjectTable.json", "Id")]
+        public readonly Dictionary<int, ProfileCardObjectRecord> ProfileCardObjectTable = [];
 
         // Contents Shop Data Tables
         [LoadRecord("ContentsShopTable.json", "Id")]

@@ -1,6 +1,8 @@
 using EpinelPS.Data;
 using EpinelPS.Database;
 using Org.BouncyCastle.Ocsp;
+using System.IO.Pipelines;
+using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace EpinelPS.Utils
 {
@@ -322,12 +324,12 @@ namespace EpinelPS.Utils
 
             if (rewardId == 0 || rewardType == RewardType.None) return;
 
-            if (rewardType == RewardType.Item || rewardType.ToString().StartsWith("Equipment_"))
+            if (rewardType == RewardType.Item || rewardType.ToString().StartsWith("Equipment"))
             {
 
                 int corpId = 0; // Default to 0 (None)
 
-                if (rewardType.ToString().StartsWith("Equipment_"))
+                if (rewardType.ToString().StartsWith("Equipment"))
                 {
                     var corpSetting = GameData.Instance.ItemEquipCorpSettingTable.Values.FirstOrDefault(x => x.Key == rewardType);
 
@@ -499,12 +501,12 @@ namespace EpinelPS.Utils
         {
             if (rewardId == 0 || rewardType == RewardType.None) return;
 
-            if (rewardType == RewardType.Item || rewardType.ToString().StartsWith("Equipment_"))
+            if (rewardType == RewardType.Item || rewardType.ToString().StartsWith("Equipment"))
             {
 
                 int corpId = 0; // Default to 0 (None)
 
-                if (rewardType.ToString().StartsWith("Equipment_"))
+                if (rewardType.ToString().StartsWith("Equipment"))
                 {
                     var corpSetting = GameData.Instance.ItemEquipCorpSettingTable.Values.FirstOrDefault(x => x.Key == rewardType);
 
@@ -586,11 +588,175 @@ namespace EpinelPS.Utils
             
         }
 
+        public static void AddSelectCharacter(User user,ref ResExecuteGacha response, int characterId)
+        {
+            int totalBodyLabels = 0;
+
+            CharacterRecord? character = GameData.Instance.CharacterTable.Where(x => x.Value.Id == characterId).FirstOrDefault().Value;
+            if (character == null)
+                throw new Exception($"cannot find character record for id {characterId}");
+
+            
+
+            if (user.GetCharacter(characterId) is CharacterModel ownedCharacter)
+            {
+                 Console.WriteLine($"[UsePiece] 角色已存在，添加碎片。");
+                ItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
+                int maxLimitBroken = GetValueByRarity(character.OriginalRare, 0, 2, 11) - 1;
+                switch (spareItem)
+                {
+                    case null:
+                        Console.WriteLine($"[UsePiece] 角色最大碎片: {maxLimitBroken}，现有碎片数量 无 ");
+                        //throw new Exception($"cannot find item record for id {spareItem}");
+                        break;
+                    default:
+                        Console.WriteLine($"[UsePiece] 角色最大碎片: {maxLimitBroken}，现有碎片数量 {spareItem.Count}");
+                        break;
+                }
+
+
+                bool canIncreaseItem = character.OriginalRare != OriginalRareType.R && ownedCharacter.Grade + (spareItem?.Count ?? 0) < maxLimitBroken;
+
+                //Console.WriteLine($"[UseSelectBox] 是否可以增加碎片: {canIncreaseItem}");
+
+                (int newSpareItemCount, int dissoluteCharacterCount) = canIncreaseItem ? (1, 0) : (0, 1);
+                if (canIncreaseItem)
+                {
+                    if (spareItem != null)
+                    {
+                        Console.WriteLine($"[UsePiece] 增加碎片: {newSpareItemCount}");
+                        spareItem.Count += newSpareItemCount;
+
+                        // ret.Item.Add(new NetItemData()
+                        // {
+                        //     Count = spareItem.Count,
+                        //     Tid = spareItem.ItemType,
+                        //     Corporation = spareItem.Corp
+                        // });
+
+                        // Send the updated item in the response
+                        response.Items.Add(new NetUserItemData()
+                        {
+                            Tid = spareItem.ItemType,
+                            Csn = spareItem.Csn,
+                            Count = spareItem.Count,
+                            Lv = spareItem.Level,
+                            Exp = spareItem.Exp,
+                            Position = spareItem.Position,
+                            Isn = spareItem.Isn
+                        });
+
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[UsePiece] 新建碎片: {newSpareItemCount}");
+                        spareItem = new()
+                        {
+                            ItemType = character.PieceId,
+                            Csn = 0,
+                            Count = newSpareItemCount,
+                            Level = 0,
+                            Exp = 0,
+                            Position = 0,
+                            Corp = 0,
+                            Isn = user.GenerateUniqueItemId()
+                        };
+                        user.Items.Add(spareItem);
+
+                        // ret.Item.Add(new NetItemData()
+                        // {
+                        //     Count = spareItem.Count,
+                        //     Tid = spareItem.ItemType,
+                        //     Corporation = spareItem.Corp
+                        // });
+
+                        // Tell the client the new amount of this item
+                        response.Items.Add(new NetUserItemData()
+                        {
+                            Tid = spareItem.ItemType,
+                            Csn = spareItem.Csn,
+                            Count = spareItem.Count,
+                            Lv = spareItem.Level,
+                            Exp = spareItem.Exp,
+                            Position = spareItem.Position,
+                            Isn = spareItem.Isn
+                        });
+
+
+                    }
+
+                   
+
+                    Console.WriteLine($"[UsePiece] 增加碎片: {spareItem.ItemType}-{spareItem.Count}");
+                }
+                else
+                {
+                    // If we cannot increase the item, we give body label instead
+                    //如果无法增加项目，我们改为提供主体标签
+
+                    int bodyLabel = GetValueByRarity(character.OriginalRare, 150, 200, 6000);
+
+                    Console.WriteLine($"[UsePiece] 碎片数量已满，只能加主体标签: {bodyLabel} 个");
+
+                    totalBodyLabels += bodyLabel * dissoluteCharacterCount;
+                    response.Reward.Character.Add(GetNetCharacterData(ownedCharacter, bodyLabel));
+                    response.Reward.Currency.Add(new NetCurrencyData() { Type = (int)CurrencyType.DissolutionPoint, Value = totalBodyLabels });
+                    user.AddCurrency(CurrencyType.DissolutionPoint, totalBodyLabels);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[UsePiece] 角色不存在，添加角色。");
+                int csn = user.GenerateUniqueCharacterId();
+                response.Characters.Add(new NetUserCharacterDefaultData
+                {
+                    CostumeId = 0,
+                    Csn = csn,
+                    Grade = 0,
+                    Lv = 1,
+                    Skill1Lv = 1,
+                    Skill2Lv = 1,
+                    Tid = character.Id,
+                    UltiSkillLv = 1
+                });
+                
+                user.Characters.Add(new CharacterModel
+                {
+                    CostumeId = 0,
+                    Csn = csn,
+                    Grade = 0,
+                    Level = 1,
+                    Skill1Lvl = 1,
+                    Skill2Lvl = 1,
+                    Tid = character.Id,
+                    UltimateLevel = 1
+                });
+
+                // Add "New Character" Badge
+                user.AddBadge(BadgeContents.NikkeNew, character.NameCode.ToString());
+                user.AddTrigger(Trigger.ObtainCharacter, 1, character.NameCode);
+                if (character.OriginalRare == OriginalRareType.SR)
+                {
+                    user.AddTrigger(Trigger.ObtainCharacterSSR, 1);
+                }
+                else
+                {
+                    user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                }
+
+                if (character.OriginalRare == OriginalRareType.SSR || character.OriginalRare == OriginalRareType.SR)
+                {
+                    user.BondInfo.Add(new() { NameCode = character.NameCode, Lv = 1 });
+                }
+            }
+
+
+            
+        }
+
         public static void AddSelectRowObject(User user, ref NetRewardData ret, int characterId, RewardType rewardType, int rewardValue)
         {
             int totalBodyLabels = 0;
-            ret = new ();
-
             CharacterRecord? character = GameData.Instance.CharacterTable.Where(x => x.Value.Id == characterId).FirstOrDefault().Value;
             if (character == null)
                 throw new Exception($"cannot find character record for id {characterId}");

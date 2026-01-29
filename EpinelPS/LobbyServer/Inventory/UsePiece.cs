@@ -180,10 +180,13 @@ namespace EpinelPS.LobbyServer.Inventory
         private PieceGradeProb GetPieceGradeProb(int pieceId) => pieceId switch
         {
             5310301 => new PieceGradeProb(0.0, 38.9997, 61.0003), // High quality Mold
-            5310302 or 5310303 or 5310304 or 5310305 => new PieceGradeProb(19.9998, 29.9997, 50.0005), // Manufacturer Mold
-            5310306 or 5310307 or 5310308 or 5310309 => new PieceGradeProb(0.0, 0.0, 100.0), // New Commander Mold or Perfect Mold
+            5310302 or 5310303 or 5310304 or 5310305 => new PieceGradeProb(19.9998, 29.9997,
+                50.0005), // Manufacturer Mold
+            5310306 or 5310307 or 5310308 or 5310309 or 5310310 or 5310311 or 5310312 or 5310313 or 5310314 or 5460352
+                or 5460100 => new PieceGradeProb(0.0, 0.0, 100.0), // New Commander Mold or Perfect Mold
             5330201 or 5359001 => new PieceGradeProb(0.0, 78.9993, 21.0007), // MId quality Mold
-            _ => throw new Exception("unknown piece Id")
+            _ => new PieceGradeProb(0.0, 0.0, 100.0) // Default for unknown piece Id
+            //_ => throw new Exception("unknown piece Id")
         };
 
         private int GetValueByRarity(OriginalRareType rarity, int rValue, int srValue, int ssrValue) => rarity switch

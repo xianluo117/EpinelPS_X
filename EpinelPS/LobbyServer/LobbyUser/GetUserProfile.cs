@@ -32,7 +32,16 @@ namespace EpinelPS.LobbyServer.LobbyUser
 
                     if (c != null)
                     {
-                        response.Data.ProfileTeam.Add(new NetProfileTeamSlot() { Slot = i + 1, Default = new() { CostumeId = c.CostumeId, Csn = c.Csn, Grade = c.Grade, Lv = c.Level, Skill1Lv = c.Skill1Lvl, Skill2Lv = c.Skill2Lvl, Tid = c.Tid, UltiSkillLv = c.UltimateLevel } });
+                        response.Data.ProfileTeam.Add(new NetProfileTeamSlot()
+                        {
+                            Slot = i + 1,
+                            Default = new()
+                            {
+                                CostumeId = c.CostumeId, Csn = c.Csn, Grade = c.Grade, Lv = c.Level,
+                                Skill1Lv = c.Skill1Lvl, Skill2Lv = c.Skill2Lvl, Tid = c.Tid,
+                                UltiSkillLv = c.UltimateLevel
+                            }
+                        });
                     }
                 }
             }

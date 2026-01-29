@@ -71,6 +71,10 @@ public class User
     public NetWallpaperJukebox[] WallpaperJukeboxList = [];
     public List<int> LobbyDecoBackgroundList = [];
 
+    //个人面板
+    public List<int> StickerList = [];
+    public List<int> BackgroundList = [];
+    public ProfileCardDecorationLayout DecorationLayout = new ();
 
     public Dictionary<int, NetUserTeamData> UserTeams = [];
     public Dictionary<int, bool> MainQuestData = [];

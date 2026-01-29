@@ -1,14 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using EpinelPS.Data;
+﻿using EpinelPS.Data;
 using EpinelPS.Database;
 using Google.Protobuf.WellKnownTypes;
+using Org.BouncyCastle.Ocsp;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace EpinelPS.Utils
 {
+
     public class NetUtils
     {
+        private static readonly Random random = new();
+
         public static (User?, AccessToken?) GetUser(string tokToCheck)
         {
             if (string.IsNullOrEmpty(tokToCheck))
@@ -435,6 +440,47 @@ namespace EpinelPS.Utils
             return ret;
         }
 
+        public static ProfileCardObjectRecord UseProfileBox(User user, int boxId)
+        {
+            ItemConsumeRecord? cItem =
+                GameData.Instance.ConsumableItems.Where(x => x.Value.Id == boxId).FirstOrDefault().Value ??
+                throw new Exception("cannot find box Id " + boxId);
+
+            if (cItem.UseType != ItemUseType.ItemRandomBox) throw new Exception("expected random box");
+
+            // find matching probability entries
+            ItemRandomRecord[] probabilityEntries =
+                [.. GameData.Instance.RandomItem.Values.Where(x => x.GroupId == cItem.UseId)];
+            if (probabilityEntries.Length == 0)
+                throw new Exception($"cannot find any probability entries with ID {cItem.UseId}, box ID: {cItem.Id}");
+
+            // run probability as many times as needed
+            ProfileCardObjectRecord ret;
+
+            ItemRandomRecord winningRecord = Rng.PickProfileItem(probabilityEntries,user);
+
+
+            ret = GameData.Instance.ProfileCardObjectTable.Where(x => x.Value.Id == winningRecord.RewardId)
+                .FirstOrDefault().Value ?? throw new Exception("cannot find Card Object Id " + winningRecord.RewardId);
+
+
+
+            Logging.WriteLine(
+                $"ProfileBox {boxId}: 获得装饰 - 类型: {winningRecord.RewardType}, ID: {winningRecord.RewardId}, Value: {winningRecord.RewardValueMin}",
+                LogType.Info);
+
+            if (winningRecord.RewardValueMin != winningRecord.RewardValueMax)
+            {
+                Logging.WriteLine("TODO: RewardValueMax", LogType.Warning);
+            }
+                
+
+            JsonDb.Save();
+
+            return ret;
+        }
+
+
         public static NetRewardData UseBundleBox(User user, int boxId, int count)
         {
             ItemConsumeRecord? cItem = GameData.Instance.ConsumableItems.Where(x => x.Value.Id == boxId).FirstOrDefault().Value ?? throw new Exception("cannot find box Id " + boxId);
@@ -497,10 +543,12 @@ namespace EpinelPS.Utils
 
                 for (int i = 0; i < count; i++)
                 {
-                    //Console.WriteLine($"[UseSelectBox] 选择盒子奖励信息 Id{selectBox.Id} , 选择物品id {selectBox.SelectOption[i].SelectType} ,RewardType {selectBox.SelectOption[i].SelectType} , Count {selectBox.SelectOption[i].SelectValue}");
+                   
 
                     int id = selectReq.Select[i].Id;
                     int itemmun = selectReq.Select[i].Count;
+
+                    Console.WriteLine($"[UseSelectBox] 选择盒子奖励信息 Id{selectBox.Id} , 选择物品id {selectBox.SelectOption[id].SelectId} ,RewardType {selectBox.SelectOption[id].SelectType} , Count {selectBox.SelectOption[id].SelectValue}");
 
                     Reward_Data reward = new Reward_Data();
                     reward.RewardType = selectBox.SelectOption[id].SelectType;
@@ -546,6 +594,7 @@ namespace EpinelPS.Utils
             return ret;
         }
 
-       
+        
     }
+
 }
