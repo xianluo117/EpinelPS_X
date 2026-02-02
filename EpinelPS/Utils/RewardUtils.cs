@@ -24,6 +24,8 @@ namespace EpinelPS.Utils
 
             if (rewardData.UserExp != 0)
             {
+                
+
                 int newXp = rewardData.UserExp + user.userPointData.ExperiencePoint;
 
                 int newLevelExp = GameData.Instance.GetUserMinXpForLevel(user.userPointData.UserLevel);
@@ -68,6 +70,8 @@ namespace EpinelPS.Utils
                 user.userPointData.ExperiencePoint = newXp;
 
                 user.userPointData.UserLevel = newLevel;
+
+                Console.WriteLine($"[ClearTower] 奖励经验 : {newXp}");
             }
 
             foreach (var item in rewardData.Rewards)

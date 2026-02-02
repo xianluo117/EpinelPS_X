@@ -16,8 +16,8 @@ namespace EpinelPS.LobbyServer.Gacha
                 {
                     Id = 80005,
                     EventSystemType = 21,
-                    EventVisibleDate = DateTime.UtcNow.Subtract(TimeSpan.FromDays(7)).Ticks,
-                    EventStartDate = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).Ticks,
+                    EventVisibleDate = DateTime.UtcNow.Subtract(TimeSpan.FromDays(27)).Ticks,
+                    EventStartDate = DateTime.UtcNow.Subtract(TimeSpan.FromDays(20)).Ticks,
                     EventEndDate = DateTime.Now.AddDays(20).Ticks,
                     EventDisableDate = DateTime.Now.AddDays(20).Ticks
                 }

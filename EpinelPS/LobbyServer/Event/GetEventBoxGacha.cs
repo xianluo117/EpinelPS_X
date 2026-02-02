@@ -16,6 +16,8 @@ namespace EpinelPS.LobbyServer.Event
                 
             };
 
+            
+
             await WriteDataAsync(response);
         }
     }

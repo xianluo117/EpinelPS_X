@@ -35,6 +35,7 @@ namespace EpinelPS.LobbyServer.Event
 
             response.LastAttendance.Day = loginEventData.LastDay;
             response.LastAttendance.AttendanceDate = loginEventData.LastDate;
+            
 
             await WriteDataAsync(response);
         }

@@ -50,8 +50,6 @@ namespace EpinelPS.LobbyServer.Inventory
             {
                 (int t1, int t2, int t3) = CalcModules(modules);
 
-                //Console.WriteLine($"[IncreaseEquipmentExp] ÓÐÊ£Óà¾­Ñé t1 {t1}£¬t2 {t2} £¬t3 {t3} ¸ö¡£");
-
                 if (t1 > 0)
                 {
                     RewardUtils.AddSpecifyObject(user, ref ret, 7010001, RewardType.Item, t1);

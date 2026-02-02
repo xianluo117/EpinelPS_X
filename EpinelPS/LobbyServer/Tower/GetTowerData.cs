@@ -9,6 +9,8 @@ namespace EpinelPS.LobbyServer.Tower
         {
             ReqGetTowerData req = await ReadData<ReqGetTowerData>();
 
+            
+
             ResGetTowerData response = new();
 
             User user = GetUser();

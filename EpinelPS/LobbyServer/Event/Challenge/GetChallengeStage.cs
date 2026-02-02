@@ -1,5 +1,6 @@
 using EpinelPS.Data;
 using EpinelPS.Database;
+using EpinelPS.LobbyServer.Event.StoryEvent;
 using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Event.Challenge
@@ -14,7 +15,7 @@ namespace EpinelPS.LobbyServer.Event.Challenge
 
             ResChallengeEventStageData response = new()
             {
-                RemainTicket = 3,
+                RemainTicket = EventStoryHelper.GetTicket(user, req.EventId),
                 TeamData = new NetUserTeamData
                 {
                     Type = (int)TeamType.ChallengeModeEvent

@@ -35,8 +35,36 @@ namespace EpinelPS.Data
 
         public readonly Dictionary<string, FieldMapRecord> MapData = [];
 
+        //ArchiveEvent
+        [LoadRecord("ArchiveEventDungeonTable.json", "Id")]
+        public readonly Dictionary<int, ArchiveEventDungeonRecord> ArchiveEventDungeonreRecordRaws = [];
+
+        [LoadRecord("ArchiveEventDungeonSpotBattleTable.json", "Id")]
+        public readonly Dictionary<int, ArchiveEventDungeonSpotBattleRecord> ArchiveEventDungeonSpotBattleRecords = [];
+
+        [LoadRecord("ArchiveEventDungeonDifficultTable.json", "Id")]
+        public readonly Dictionary<int, ArchiveEventDungeonDifficultRecord> ArchiveEventDungeonDifficultRecords = [];
+
+        [LoadRecord("ArchiveEventDungeonStageTable.json", "Id")]
+        public readonly Dictionary<int, ArchiveEventDungeonStageRecord> archiveEventDungeonStageRecords = [];
+
+
+
+
+
+
+        [LoadRecord("CashShopTable.json", "Id")]
+        public readonly Dictionary<int, CashShopRecord> CashShopRecords = [];
+
+
+        [LoadRecord("FunctionTable.json", "Id")]
+        public readonly Dictionary<int, FunctionRecord> FunctionRecords = [];
+
+
+
         [LoadRecord("ItemSelectOptionTable.json", "Id")]
         public readonly Dictionary<int, ItemSelectOptionRecord> SelectItem = [];
+
         [LoadRecord("ItemSelectOptionRowTable.json", "Id")]
         public readonly Dictionary<int, ItemSelectOptionRowRecord> SelectRowItem = [];
         [LoadRecord("MainQuestTable.json", "Id")]
@@ -125,8 +153,7 @@ namespace EpinelPS.Data
         [LoadRecord("ArchiveEventQuestTable.json", "Id")]
         public readonly Dictionary<int, ArchiveEventQuestRecord_Raw> archiveEventQuestRecords = [];
 
-        [LoadRecord("ArchiveEventDungeonStageTable.json", "Id")]
-        public readonly Dictionary<int, ArchiveEventDungeonStageRecord> archiveEventDungeonStageRecords = [];
+        
 
         [LoadRecord("UserTitleTable.json", "Id")]
         public readonly Dictionary<int, UserTitleRecord> userTitleRecords = [];
