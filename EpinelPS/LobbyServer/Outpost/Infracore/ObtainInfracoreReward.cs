@@ -1,7 +1,7 @@
 using EpinelPS.Utils;
 using EpinelPS.Data;
 
-namespace EpinelPS.LobbyServer.Outpost
+namespace EpinelPS.LobbyServer.Outpost.Infracore
 {
     [PacketPath("/infracore/reward")]
     public class ObtainInfracoreReward : LobbyMsgHandler
@@ -15,11 +15,14 @@ namespace EpinelPS.LobbyServer.Outpost
 
             int currentLevel = user.InfraCoreLvl;
 
+            Logging.WriteLine($"当前等级：{currentLevel}",LogType.Info);
+
              Dictionary<int, InfraCoreGradeRecord> gradeTable = GameData.Instance.InfracoreTable;
             if (gradeTable.TryGetValue(currentLevel, out var gradeData))
             {
                 if (gradeData.RewardId > 0)
                 {
+                    Logging.WriteLine($"奖励ID：{gradeData.RewardId}", LogType.Info);
                     bool isReceived = user.InfraCoreRewardReceived.ContainsKey(currentLevel) && user.InfraCoreRewardReceived[currentLevel];
                     
                     if (!isReceived)
@@ -27,6 +30,8 @@ namespace EpinelPS.LobbyServer.Outpost
                         user.InfraCoreRewardReceived[currentLevel] = true;
                         
                         var reward = RewardUtils.RegisterRewardsForUser(user, gradeData.RewardId);
+
+
                         response.Reward = reward;
                     }
                 }

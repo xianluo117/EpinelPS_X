@@ -30,6 +30,15 @@ namespace EpinelPS.LobbyServer.Intercept
                 BonusReward = sRes.BonusReward
             };
 
+            if (!user.InterceptRecord.TryGetValue(req.InterceptId, out long value))
+            {
+                user.InterceptRecord[req.InterceptId] = req.Damage;
+            }
+            else if (value < req.Damage)
+            {
+                user.InterceptRecord[req.InterceptId] = req.Damage;
+            }
+
             user.AddTrigger(Data.Trigger.InterceptClear, 1);
 
             JsonDb.Save();

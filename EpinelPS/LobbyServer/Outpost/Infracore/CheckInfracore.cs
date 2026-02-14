@@ -1,7 +1,7 @@
 ﻿using EpinelPS.Utils;
 using EpinelPS.Data;
 
-namespace EpinelPS.LobbyServer.Outpost
+namespace EpinelPS.LobbyServer.Outpost.Infracore
 {
     [PacketPath("/infracore/check")]
     public class CheckInfracore : LobbyMsgHandler
@@ -20,8 +20,10 @@ namespace EpinelPS.LobbyServer.Outpost
             Dictionary<int, InfraCoreGradeRecord> gradeTable = GameData.Instance.InfracoreTable;
             if (gradeTable.TryGetValue(currentLevel, out var gradeData))
             {
+                Logging.WriteLine($"[CheckInfracore] 获取奖励：Id{gradeData.Id},奖励物品{gradeData.RewardId}.");
                 if (gradeData.RewardId > 0)
                 {
+
                     isReceived = user.InfraCoreRewardReceived.ContainsKey(currentLevel) && user.InfraCoreRewardReceived[currentLevel];
                 }
             }

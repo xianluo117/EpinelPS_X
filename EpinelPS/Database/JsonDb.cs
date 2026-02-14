@@ -96,6 +96,7 @@ namespace EpinelPS.Database
 
         private static void ValidateDb()
         {
+            List<int> mergeItemTypes = new List<int>(){ 7010001, 7010002, 7010003 };
             // check if character level is valid
             foreach (var user in Instance.Users)
             {
@@ -107,19 +108,24 @@ namespace EpinelPS.Database
                         c.Level = 1000;
                     }
                 }
-                //Console.WriteLine("合并重复物品");
-                user.Items = MergeItemsByType(user.Items);
+
+               
+                user.Items = MergeItemsByType(user.Items, mergeItemTypes);
             }
         }
 
-        public static List<ItemData> MergeItemsByType(List<ItemData> items)
+        public static List<ItemData> MergeItemsByType(List<ItemData> items, List<int> mergeItemTypes = null)
         {
             var mergedDict = new Dictionary<int, ItemData>();
 
             foreach (var item in items)
             {
-                if (mergedDict.TryGetValue(item.ItemType, out var existingItem))
+                // 如果指定了合并列表，且当前项不在列表中，则不合并
+                bool shouldMerge = mergeItemTypes == null || mergeItemTypes.Contains(item.ItemType);
+
+                if (mergedDict.TryGetValue(item.ItemType, out var existingItem) && shouldMerge)
                 {
+                    Console.WriteLine("合并重复物品");
                     // 合并已有项
                     existingItem.Count += item.Count;
                     existingItem.Level = Math.Max(existingItem.Level, item.Level);
@@ -154,6 +160,7 @@ namespace EpinelPS.Database
 
             return mergedDict.Values.ToList();
         }
+
 
 
         public static User? GetUser(ulong id)

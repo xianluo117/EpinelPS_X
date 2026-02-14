@@ -12,6 +12,8 @@ namespace EpinelPS.LobbyServer.Archive
 
             ResGetArchiveRecord response = new();
 
+            //活动关卡
+
             // Explicitly select IDs from the records
             List<int> allIds = [.. GameData.Instance.archiveRecordManagerTable.Values.Select(record => record.Id)];
 

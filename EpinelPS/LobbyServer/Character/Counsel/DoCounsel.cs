@@ -12,6 +12,8 @@ namespace EpinelPS.LobbyServer.Character.Counsel
             ReqCharacterCounsel req = await ReadData<ReqCharacterCounsel>();
             User user = GetUser();
 
+            user.ResetableData.DailyCounselCount.TryGetValue(1, out int CounselCount);
+
             ResCharacterCounsel response = new();
 
             foreach (KeyValuePair<CurrencyType, long> currency in user.Currency)
@@ -66,6 +68,10 @@ namespace EpinelPS.LobbyServer.Character.Counsel
                     GainExp = 100
                 };
             }
+
+            CounselCount -= 1;
+
+            user.ResetableData.DailyCounselCount[1] = CounselCount;
 
             user.AddTrigger(Trigger.CharacterCounsel,1);
             JsonDb.Save();

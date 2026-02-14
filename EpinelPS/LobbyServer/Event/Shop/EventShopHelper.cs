@@ -210,14 +210,17 @@ namespace EpinelPS.LobbyServer.Event.Shop
         {
             if (eventId <= 0) return 0;
 
-            if (GameData.Instance.eventManagers.TryGetValue(eventId, out var eventRecord))
+            var eventRecord = GameData.Instance.EventStoryTable.Values.FirstOrDefault(r => r.EventId == eventId);
+
+            if (eventRecord != null)
             {
-                if (eventRecord.EventShortcutId is not null && eventRecord.EventShortcutId != "")
+                Logging.WriteLine($"获取 EventStoryTableId: {eventRecord.Id}", LogType.Info);
+                if (eventRecord.ContentsShopId != 0)
                 {
-                    return Convert.ToInt32(eventRecord.EventShortcutId);
+                    return eventRecord.ContentsShopId;
                 }
             }
-            log.Warn($"EventManager not found for EventId: {eventId}");
+            log.Warn($"EventStoryTable not found for EventId: {eventId}");
             return 0;
         }
 
@@ -231,6 +234,7 @@ namespace EpinelPS.LobbyServer.Event.Shop
             NetEventShopProductData shop = new();
 
             var shopId = GetEventShopId(eventId);
+            Logging.WriteLine($"获取 shopId: {shopId}", LogType.Info);
             if (shopId <= 0) return shop;
 
             try

@@ -295,7 +295,48 @@ namespace EpinelPS.Utils
         {
             foreach (NetCurrencyData? item in rewardData.Currency)
             {
-                user.AddCurrency((CurrencyType)item.Type, item.Value);
+                if ((CurrencyType)item.Type == CurrencyType.UserExp)
+                {
+                    if (item.Value!=0)
+                    {
+
+                        int newXp = (int)item.Value + user.userPointData.ExperiencePoint;
+
+                        int newLevelExp = GameData.Instance.GetUserMinXpForLevel(user.userPointData.UserLevel);
+                        int newLevel = user.userPointData.UserLevel;
+
+                        if (newLevelExp == -1)
+                        {
+                            Console.WriteLine("Unknown user level value for xp " + newXp);
+                        }
+
+                        int newGems = 0;
+
+                        while (newXp >= newLevelExp)
+                        {
+                            newLevel++;
+                            newGems += 30;
+                            newXp -= newLevelExp;
+                            if (user.Currency.ContainsKey(CurrencyType.FreeCash))
+                                user.Currency[CurrencyType.FreeCash] += 30;
+                            else
+                                user.Currency.Add(CurrencyType.FreeCash, 30);
+
+                            newLevelExp = GameData.Instance.GetUserMinXpForLevel(newLevel);
+                        }
+
+                        user.userPointData.ExperiencePoint = newXp;
+
+                        user.userPointData.UserLevel = newLevel;
+
+                        Console.WriteLine($"[DoWipeout] 奖励经验 : {newXp}");
+                    }
+                }
+                else
+                {
+                    user.AddCurrency((CurrencyType)item.Type, item.Value);
+                }
+                
             }
 
             // TODO: other things that are used by the function above
@@ -566,7 +607,7 @@ namespace EpinelPS.Utils
                 
 
                 ItemSelectOptionRowRecord[]? probabilityEntries = [.. GameData.Instance.SelectRowItem.Values.Where(x => x.GroupId == cItem.UseId)];
-                if (probabilityEntries.Length == 0) throw new Exception($"cannot find any probability entries with ID {cItem.UseId}, box ID: {cItem.Id}");
+                if (probabilityEntries.Length == 0) throw new Exception($"cannot find anmission/getrewarded/dailyy probability entries with ID {cItem.UseId}, box ID: {cItem.Id}");
 
                 //Console.WriteLine($"[UseSelectBox] 自选角色 - GroupId: {cItem.UseId}, 角色数量 {probabilityEntries.Length},Id: {selectReq.Select[0].Id}");
 

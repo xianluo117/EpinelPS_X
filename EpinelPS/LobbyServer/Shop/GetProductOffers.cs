@@ -9,13 +9,25 @@ namespace EpinelPS.LobbyServer.Shop
         protected override async Task HandleAsync()
         {
             ReqListSeenProductOffer x = await ReadData<ReqListSeenProductOffer>();
-
+            
             // Disable in game ads
             ResListSeenProductOffer response = new();
-            foreach(KeyValuePair<int, ProductOfferRecord> item in GameData.Instance.ProductOffers)
+
+            foreach (ProductOfferRecord item in GameData.Instance.ProductOffers.Values)
             {
-                response.Result.Add(new NetUserProductOfferSeenHistory() { ProductOfferId = item.Key });
+                NetUserProductOfferSeenHistory nhHistory = new NetUserProductOfferSeenHistory();
+                nhHistory.ProductOfferId = item.Id;
+
+                if (item.IsActive)
+                {
+                    response.Result.Add(nhHistory);
+                }
             }
+
+            // foreach (KeyValuePair<int, ProductOfferRecord> item in GameData.Instance.ProductOffers)
+            // {
+            //     response.Result.Add(new NetUserProductOfferSeenHistory() { ProductOfferId = item.Key });
+            // }
 
             await WriteDataAsync(response);
         }

@@ -1,3 +1,4 @@
+using EpinelPS.Database;
 using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Event
@@ -11,9 +12,26 @@ namespace EpinelPS.LobbyServer.Event
             ReqGetEventBoxGacha req = await ReadData<ReqGetEventBoxGacha>();
             User user = GetUser();
 
+            Logging.WriteLine($"EventId-{req.EventId}",LogType.Warning);
+
+            int gCount = 0;
+
+            // Check if eventgacha exists
+            if (!user.EventGachaCount.TryGetValue(req.EventId, out var gachacount))
+            {
+                user.EventGachaCount.Add(req.EventId, 0);
+                JsonDb.Save();
+            }
+            else
+            {
+                gCount = gachacount;
+            }
+
+
             ResGetEventBoxGacha response = new()
             {
-                
+                GachaCount = gCount,
+               
             };
 
             

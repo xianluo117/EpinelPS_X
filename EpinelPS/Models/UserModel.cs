@@ -76,6 +76,8 @@ public class User
     public List<int> BackgroundList = [];
     public ProfileCardDecorationLayout DecorationLayout = new ();
 
+    public Dictionary<int, long> InterceptRecord = [];
+    
     public Dictionary<int, NetUserTeamData> UserTeams = [];
     public Dictionary<int, bool> MainQuestData = [];
     public Dictionary<int, bool> SubQuestData = [];
@@ -125,6 +127,8 @@ public class User
     public MogMinigameInfo MogInfo = new();
     public List<NetPlaySodaEachGameInfo> ArcadePlaySodaInfoList = [];
     public NetArcadeMvgData ArcadeInTheMirrorData = new();
+
+    public Dictionary<int, int> EventGachaCount = [];// key: eventId
 
     public Dictionary<int, PassData> UserPassInfo = []; // user pass data, key is PassId
 
@@ -398,7 +402,7 @@ public class User
         return msg;
     }
 
-    private bool ShouldResetUser()
+    public bool ShouldResetUser()
     {
         var nowLocal = DateTime.UtcNow;
 

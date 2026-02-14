@@ -24,6 +24,7 @@ namespace EpinelPS.LobbyServer.LobbyUser
                 response.Data.LastCampaignNormalStageId = user.LastNormalStageCleared;
                 response.Data.LastCampaignHardStageId = user.LastHardStageCleared;
                 response.Data.OutpostOpenState = user.MainQuestData.ContainsKey(25);
+                response.Data.Exp = user.userPointData.ExperiencePoint;
 
                 for (int i = 0; i < user.RepresentationTeamDataNew.Length; i++)
                 {

@@ -49,10 +49,25 @@ namespace EpinelPS.Data
         public readonly Dictionary<int, ArchiveEventDungeonStageRecord> archiveEventDungeonStageRecords = [];
 
 
+        //InApp商店
+        [LoadRecord("InAppShopInfoTable.json", "Id")]
+        public readonly Dictionary<int, InAppShopInfoRecord> InAppShopInfoRecords = [];
+        [LoadRecord("InAppShopManagerTable.json", "Id")]
+        public readonly Dictionary<int, InAppShopManagerRecord> InAppShopManagerRecords = [];
 
 
+        //EventBoxGache
+        [LoadRecord("EventBoxGachaTable.json", "Id")]
+        public readonly Dictionary<int, EventBoxGachaRecord> EventBoxGachaTable = [];
+        [LoadRecord("EventBoxGachaRewardTable.json", "Id")]
+        public readonly Dictionary<int, EventBoxGachaRewardRecord> EventBoxGachaRewardTable = [];
+        [LoadRecord("EventBoxGachaProbTable.json", "Id")]
+        public readonly Dictionary<int, EventBoxGachaProbRecord> EventBoxGachaProbTable = [];
+        [LoadRecord("EventBoxGachaPriceTable.json", "Id")]
+        public readonly Dictionary<int, EventBoxGachaPriceRecord> EventBoxGachaPriceTable = [];
 
 
+        //珠宝商店
         [LoadRecord("CashShopTable.json", "Id")]
         public readonly Dictionary<int, CashShopRecord> CashShopRecords = [];
 
@@ -308,6 +323,12 @@ namespace EpinelPS.Data
         public readonly Dictionary<int, ProfileCardObjectRecord> ProfileCardObjectTable = [];
 
         // Contents Shop Data Tables
+        [LoadRecord("ContentsShopInfoTable.json", "Id")]
+        public readonly Dictionary<int, ContentsShopInfoRecord> ContentsShopInfoTable = [];
+        [LoadRecord("ContentsShopRenewTable.json", "Id")]
+        public readonly Dictionary<int, ContentsShopRenewRecord> ContentsShopRenewTable = [];
+        [LoadRecord("ContentsShopCurrencyOrderTable.json", "Id")]
+        public readonly Dictionary<int, ContentsShopCurrencyOrderRecord_Raw> ContentsShopCurrencyOrderTable = [];
         [LoadRecord("ContentsShopTable.json", "Id")]
         public readonly Dictionary<int, ContentsShopRecord> ContentsShopTable = [];
         [LoadRecord("ContentsShopProductTable.json", "Id")]
@@ -679,6 +700,7 @@ namespace EpinelPS.Data
         {
             return RewardDataRecords[rewardId];
         }
+
         /// <summary>
         /// Returns the level and its minimum value for XP value
         /// </summary>
@@ -705,6 +727,35 @@ namespace EpinelPS.Data
             }
             return (-1, -1);
         }
+
+        /// <summary>
+        /// 获取基础核心等级
+        /// </summary>
+        /// <param name="targetExp">经验</param>
+        /// <returns>等级</returns>
+        /// <exception cref="Exception"></exception>
+        public int GetInfraCoreLev(int targetExp)
+        {
+            int prevLevel = 0;
+            int prevValue = 0;
+            for (int i = 1; i < InfracoreTable.Count + 1; i++)
+            {
+                InfraCoreGradeRecord item = InfracoreTable[i];
+
+                if (prevValue < targetExp)
+                {
+                    prevLevel = item.Grade;
+                    prevValue = item.InfraCoreExp;
+                }
+                else
+                {
+                    return (prevLevel);
+                }
+            }
+            return (1);
+        }
+
+
         public int GetUserMinXpForLevel(int targetLevel)
         {
             for (int i = 1; i < UserExpDataRecords.Count + 1; i++)

@@ -1,6 +1,6 @@
 ﻿using EpinelPS.Utils;
 
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Scenario
 {
     [PacketPath("/User/GetScenarioList")]
     public class GetScenarioList : LobbyMsgHandler

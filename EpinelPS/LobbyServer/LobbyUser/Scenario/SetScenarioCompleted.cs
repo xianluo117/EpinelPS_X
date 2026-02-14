@@ -2,7 +2,7 @@
 using EpinelPS.Data;
 using EpinelPS.Utils;
 
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Scenario
 {
     [PacketPath("/User/SetScenarioComplete")]
     public class SetScenarioCompleted : LobbyMsgHandler

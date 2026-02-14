@@ -2,6 +2,7 @@ using EpinelPS.Data;
 using EpinelPS.Utils;
 using log4net;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Ocsp;
 
 namespace EpinelPS.LobbyServer.Event.StoryEvent
 {
@@ -19,15 +20,20 @@ namespace EpinelPS.LobbyServer.Event.StoryEvent
         {
 
             int freeTicket = 5; // Default ticket is 5
-
+            int dateDay = user.GetDateDay();
             // Get user event data, if exists, get free ticket
             if (user.EventInfo.TryGetValue(eventId, out var eventData))
             {
                 freeTicket = eventData.FreeTicket;
             }
+            else
+            {
+                eventData = new() { LastStage = 0 ,FreeTicket = freeTicket ,LastDay = dateDay };
+                user.EventInfo.Add(eventId, eventData);
+            }
 
-            // Get item ticket information and free ticket max
-            (ItemData itemTicket, int freeTicketMax) = GetItemTicket(user, eventId);
+                // Get item ticket information and free ticket max
+                (ItemData itemTicket, int freeTicketMax) = GetItemTicket(user, eventId);
 
             // Get remain item ticket
             int remainItemTicket = itemTicket?.Count ?? 0;
@@ -35,7 +41,7 @@ namespace EpinelPS.LobbyServer.Event.StoryEvent
             // If free ticket is greater than free ticket max, set free ticket to free ticket max
             if (freeTicket > freeTicketMax) freeTicket = freeTicketMax;
 
-            int dateDay = user.GetDateDay();
+            
             // If dateDay is greater than last day, update user free ticket and last day
             if (dateDay > eventData.LastDay)
             {

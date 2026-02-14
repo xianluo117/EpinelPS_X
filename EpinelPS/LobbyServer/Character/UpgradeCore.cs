@@ -60,8 +60,11 @@ namespace EpinelPS.LobbyServer.Character
                     user.RemoveItemBySerialNumber(req.Isn, req.Count);
                     response.Items.Add(NetUtils.ToNet(bodyItem));
 
+                    Logging.WriteLine($"[CoreUpgrade]等级核心id：{newCharacter.GradeCoreId}",LogType.Info);
+
                     if (newCharacter.GradeCoreId == 103 || newCharacter.GradeCoreId == 11 || newCharacter.GradeCoreId == 201)
                     {
+                        Logging.WriteLine($"[CoreUpgrade]增加突破计数。", LogType.Info);
                         user.AddTrigger(Trigger.CharacterGradeMax, 1);
                     }
 

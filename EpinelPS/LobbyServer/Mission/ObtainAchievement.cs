@@ -34,6 +34,10 @@ namespace EpinelPS.LobbyServer.Mission
                 total_points++;
             }
 
+            user.InfraCoreExp += 10 * total_points;
+
+            user.InfraCoreLvl = GameData.Instance.GetInfraCoreLev(user.InfraCoreExp);
+
             user.AddTrigger(Trigger.PointRewardAchievement, total_points);
 
             response.Reward = NetUtils.MergeRewards(rewards, user);

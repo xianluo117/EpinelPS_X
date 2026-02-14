@@ -32,10 +32,11 @@ namespace EpinelPS.LobbyServer.Inventory
             if (box.Count == 0) user.Items.Remove(box);
             
             var  ss = response.OpeningResult;
-            ProfileCardObjectRecord tempCardObjectRecord;
+            
 
             for (int i = 0; i < req.NumOpens; i++)
             {
+                ProfileCardObjectRecord tempCardObjectRecord =new();
 
                 tempCardObjectRecord = NetUtils.UseProfileBox(user, box.ItemType);
 

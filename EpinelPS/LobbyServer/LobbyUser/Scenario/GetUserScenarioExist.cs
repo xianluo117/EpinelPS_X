@@ -1,5 +1,5 @@
 ﻿using EpinelPS.Utils;
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Scenario
 {
     [PacketPath("/user/scenario/exist")]
     public class GetUserScenarioExist : LobbyMsgHandler

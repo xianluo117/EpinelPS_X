@@ -1,4 +1,5 @@
-﻿using EpinelPS.Database;
+﻿using EpinelPS.Data;
+using EpinelPS.Database;
 using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Inventory
@@ -16,7 +17,9 @@ namespace EpinelPS.LobbyServer.Inventory
 
             ItemData box = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ?? throw new InvalidDataException("cannot find box with isn " + req.Isn);
 
-            int totalCount = req.Select.Sum(opt => opt.Count);
+            var boxinfo = GameData.Instance.ConsumableItems.Where(x => x.Value.Id == box.ItemType).FirstOrDefault().Value;
+            Logging.WriteLine($"单次使用消耗 {boxinfo.UseFragCost} 个");
+            int totalCount = req.Select.Sum(opt => opt.Count)*boxinfo.UseFragCost;
 
             if (totalCount > box.Count) throw new Exception("count mismatch");
 

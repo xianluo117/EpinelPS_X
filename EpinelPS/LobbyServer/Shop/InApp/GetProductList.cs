@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using EpinelPS.Data;
 using EpinelPS.Utils;
 
-namespace EpinelPS.LobbyServer.Shop
+namespace EpinelPS.LobbyServer.Shop.InApp
 {
     [PacketPath("/inappshop/jupiter/getproductlist")]
     public class GetProductList : LobbyMsgHandler
