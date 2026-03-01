@@ -7,6 +7,7 @@ namespace EpinelPS.LobbyServer.Character
     [PacketPath("/character/coreupgrade")]
     public class CoreUpgrade : LobbyMsgHandler
     {
+        //核心强化
         protected override async Task HandleAsync()
         {
             // Read the incoming request that contains the current CSN and ISN
@@ -65,10 +66,12 @@ namespace EpinelPS.LobbyServer.Character
                     if (newCharacter.GradeCoreId == 103 || newCharacter.GradeCoreId == 11 || newCharacter.GradeCoreId == 201)
                     {
                         Logging.WriteLine($"[CoreUpgrade]增加突破计数。", LogType.Info);
-                        user.AddTrigger(Trigger.CharacterGradeMax, 1);
+                        user.AddTrigger(Trigger.CharacterGradeMax, 1,0);
                     }
 
-                    user.AddTrigger(Trigger.CharacterLevelUpCount, 1);
+                    //user.AddTrigger(Trigger.CharacterLevelUpCount, 1);
+                    user.AddTrigger(Trigger.CharacterCore,1,0);
+                    user.AddTrigger(Trigger.CharacterGradeUpCount, 1);
                     JsonDb.Save();
                 }
             }

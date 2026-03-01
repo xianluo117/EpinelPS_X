@@ -9,6 +9,8 @@ namespace EpinelPS.LobbyServer.Shop.InApp
         {
             ReqGetMonthlySubscriptionReward req = await ReadData<ReqGetMonthlySubscriptionReward>();
 
+            Logging.WriteLine($"GetMonthlySubscriptionReward: {req}", LogType.Warning);
+
             ResGetMonthlySubscriptionReward response = new();
 
             // TODO: ValIdate response from real server

@@ -128,6 +128,7 @@ namespace EpinelPS.LobbyServer.Pass
                     while (newXp >= newLevelExp)
                     {
                         newLevel++;
+                        user.AddTrigger(Trigger.UserLevel, newLevel, 0);
                         newGems += 30;
                         newXp -= newLevelExp;
                         if (user.Currency.ContainsKey(CurrencyType.FreeCash))

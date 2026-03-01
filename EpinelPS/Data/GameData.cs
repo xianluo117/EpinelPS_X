@@ -68,6 +68,24 @@ namespace EpinelPS.Data
         //珠宝商店
         [LoadRecord("CashShopTable.json", "Id")]
         public readonly Dictionary<int, CashShopRecord> CashShopRecords = [];
+        [LoadRecord("ShopPackageTable.json", "Id")]
+        public readonly Dictionary<int, ShopPackageRecord> ShopPackageTable = [];
+        [LoadRecord("ShopProductTable.json", "Id")]
+        public readonly Dictionary<int, ShopProductRecord> ShopProductTable = [];
+        [LoadRecord("ShopTable.json", "Id")]
+        public readonly Dictionary<int, ShopRecord> ShopTable = [];
+
+        [LoadRecord("PackageGroupTable.json", "Id")]
+        public readonly Dictionary<int, PackageGroupRecord> PackageGroupTable = [];
+        [LoadRecord("PackageListTable.json", "Id")]
+        public readonly Dictionary<int, PackageListRecord> PackageListTable = [];
+        [LoadRecord("PackageShopTable.json", "Id")]
+        public readonly Dictionary<int, PackageShopRecord> PackageShopTable = [];
+
+
+
+
+
 
 
         [LoadRecord("FunctionTable.json", "Id")]
@@ -133,8 +151,27 @@ namespace EpinelPS.Data
         [LoadRecord("FieldItemTable.json", "Id")]
         public readonly Dictionary<int, FieldItemRecord> FieldItems = [];
 
+
+        //派遣
         [LoadRecord("OutpostBattleTable.json", "Id")]
         public readonly Dictionary<int, OutpostBattleRecord> OutpostBattle = [];
+        [LoadRecord("OutpostBattleBoxSettingTable.json", "Id")]
+        public readonly Dictionary<int, OutpostBattleBoxSettingRecord> OutpostBattleBoxSettingTable = [];
+        [LoadRecord("OutpostBuildingSlotTable.json", "Id")]
+        public readonly Dictionary<int, OutpostBuildingSlotRecord> OutpostBuildingSlotTable = [];
+        [LoadRecord("OutpostBuildingTable.json", "Id")]
+        public readonly Dictionary<int, OutpostBuildingRecord> OutpostBuildingTable = [];
+        [LoadRecord("OutpostConditionTriggerTable.json", "Id")]
+        public readonly Dictionary<int, OutpostConditionTriggerRecord> OutpostConditionTriggerTable = [];
+        [LoadRecord("OutpostFastBattleTable.json", "Id")]
+        public readonly Dictionary<int, OutpostFastBattleRecord> OutpostFastBattleTable = [];
+        [LoadRecord("OutpostMapChangeSchedulerTable.json", "Id")]
+        public readonly Dictionary<int, OutpostMapChangeSchedulerRecord_Raw> OutpostMapChangeSchedulerTable = [];
+        [LoadRecord("OutpostResourceTable.json", "Id")]
+        public readonly Dictionary<int, OutpostResourceRecord> OutpostResourceTable = [];
+
+
+
 
         [LoadRecord("JukeboxListTable.json", "Id")]
         public readonly Dictionary<int, JukeboxListRecord> jukeboxListDataRecords = [];
@@ -149,14 +186,12 @@ namespace EpinelPS.Data
         public readonly Dictionary<int, EventManagerRecord> eventManagers = [];
 
         [LoadRecord("LiveWallpaperTable.json", "Id")]
-        public readonly Dictionary<int, LiveWallpaperRecord> lwptablemgrs = [];
+        public readonly Dictionary<int, LiveWallpaperRecord> LiveWallpaperTable = [];
 
         [LoadRecord("AlbumResourceTable.json", "Id")]
         public readonly Dictionary<int, AlbumResourceRecord> albumResourceRecords = [];
 
-        [LoadRecord("UserFrameTable.json", "Id")]
-        public readonly Dictionary<int, UserFrameRecord> userFrameTable = [];
-
+        
         [LoadRecord("ArchiveRecordManagerTable.json", "Id")]
         public readonly Dictionary<int, ArchiveRecordManagerRecord> archiveRecordManagerTable = [];
 
@@ -168,8 +203,7 @@ namespace EpinelPS.Data
 
         
 
-        [LoadRecord("UserTitleTable.json", "Id")]
-        public readonly Dictionary<int, UserTitleRecord> userTitleRecords = [];
+       
 
         [LoadRecord("ArchiveMessengerConditionTable.json", "Id")]
         public readonly Dictionary<int, ArchiveMessengerConditionRecord> archiveMessengerConditionRecords = [];
@@ -316,9 +350,30 @@ namespace EpinelPS.Data
         [LoadRecord("LoginEventTable.json", "Id")]
         public readonly Dictionary<int, LoginEventRecord> LoginEventTable = [];
 
-        //Profile Card Object Table
+        //个人面板
         [LoadRecord("ProfileCardObjectTable.json", "Id")]
         public readonly Dictionary<int, ProfileCardObjectRecord> ProfileCardObjectTable = [];
+
+        [LoadRecord("UserIconTable.json", "Id")]
+        public readonly Dictionary<int, UserIconRecord> UserIconTable = [];
+        
+        [LoadRecord("UserTitleAcquireConditionTable.json", "Id")]
+        public readonly Dictionary<int, UserTitleAcquireConditionRecord> UserTitleAcquireConditionTable = [];
+
+        [LoadRecord("UserTitleAssemblyTable.json", "Id")]
+        public readonly Dictionary<int, UserTitleAssemblyRecord>  UserTitleAssemblyTable = [];
+
+        [LoadRecord("UserTitleSingleTable.json", "Id")]
+        public readonly Dictionary<int, UserTitleSingleRecord> UserTitleSingleTable = [];
+
+        [LoadRecord("UserTitleTable.json", "Id")]
+        public readonly Dictionary<int, UserTitleRecord> userTitleRecords = [];
+
+        [LoadRecord("UserFrameTable.json", "Id")]
+        public readonly Dictionary<int, UserFrameRecord> userFrameTable = [];
+
+
+
 
         // Contents Shop Data Tables
         [LoadRecord("ContentsShopInfoTable.json", "Id")]
@@ -805,6 +860,7 @@ namespace EpinelPS.Data
             }
             return -1;
         }
+
         public IEnumerable<int> GetAllCostumes()
         {
             foreach (KeyValuePair<int, CharacterCostumeRecord> item in CharacterCostumeTable)

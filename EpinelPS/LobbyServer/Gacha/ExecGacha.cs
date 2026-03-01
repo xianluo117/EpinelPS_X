@@ -215,7 +215,7 @@ namespace EpinelPS.LobbyServer.Gacha
                     // Add "New Character" Badge
                     user.AddBadge(BadgeContents.NikkeNew, characterData.NameCode.ToString());
                     user.AddTrigger(Trigger.ObtainCharacter, 1, characterData.NameCode);
-                    user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                    user.AddTrigger(Trigger.ObtainCharacterNew, 1,0);
 
                     if (characterData.OriginalRare == OriginalRareType.SSR || characterData.OriginalRare == OriginalRareType.SR)
                     {

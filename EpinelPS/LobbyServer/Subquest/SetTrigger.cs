@@ -19,7 +19,7 @@ namespace EpinelPS.LobbyServer.Subquest
 
 
             user.AddTrigger(Trigger.CampaignGroupClear, record.ClearConditionValue, record.ClearConditionId); // TODO this may need to go elsewhere
-user.AddTrigger(Trigger.FieldObjectCollection, record.ClearConditionValue, record.ClearConditionId); // TODO this may need to go elsewhere
+            user.AddTrigger(Trigger.FieldObjectCollection, record.ClearConditionValue, record.ClearConditionId); // TODO this may need to go elsewhere
             user.AddTrigger(Trigger.SubQuestClear, 1, req.SubquestId);
 
             JsonDb.Save();

@@ -11,9 +11,17 @@ namespace EpinelPS.LobbyServer.Shop.InApp
         {
             ReqGetInAppShopBuyProduct  req = await ReadData<ReqGetInAppShopBuyProduct>();
 
-            ResGetInAppShopBuyProduct  response = new();
+            Logging.WriteLine($"GetBuyProduct: ProductId - {req.ProductId},Token -{req.Token}", LogType.Warning);
 
-            
+            ResGetInAppShopBuyProduct  response = new();
+            NetRewardData ret = new();
+
+
+
+
+
+
+            response.Reward =ret;
             
            
             await WriteDataAsync(response);

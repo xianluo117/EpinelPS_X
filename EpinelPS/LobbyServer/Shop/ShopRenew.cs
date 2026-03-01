@@ -14,7 +14,7 @@ namespace EpinelPS.LobbyServer.Shop
             Logging.WriteLine($"[ShopRenew]{req},id- {req.ShopCategory}", LogType.Warning);
 
             ResShopRenew response = new();
-
+            
             await WriteDataAsync(response);
         }
     }

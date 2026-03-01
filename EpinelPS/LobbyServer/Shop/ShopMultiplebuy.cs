@@ -1,4 +1,6 @@
-﻿using EpinelPS.Utils;
+﻿using EpinelPS.Data;
+using EpinelPS.LobbyServer.Event.Shop;
+using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Shop
 {
@@ -14,7 +16,20 @@ namespace EpinelPS.LobbyServer.Shop
             Logging.WriteLine($"[ShopMultipleBuy]{req},ShopCategory - {req.ShopCategory},Products - {req.Products}", LogType.Warning);
 
             ResShopBuyMultipleProduct response = new();
+            User user = GetUser();
 
+
+            try
+            {
+                ShopHelper.BuyShopMultipleProduct(user, ref response, req);
+                response.Result = ShopBuyProductResult.Success;
+            }
+            catch (Exception ex)
+            {
+                Logging.WriteLine($"Error buying shop product: {ex.Message}", LogType.Error);
+            }
+
+            user.AddTrigger(Trigger.MainShopBuy, req.Products.Count);
             await WriteDataAsync(response);
         }
     }

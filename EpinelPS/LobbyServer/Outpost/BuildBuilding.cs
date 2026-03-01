@@ -14,6 +14,11 @@ namespace EpinelPS.LobbyServer.Outpost
     {
         private static BuildingCost GetBuildingCost(int buildingId)
         {
+            var build = GameData.Instance.OutpostBuildingTable.Values.FirstOrDefault(x => x.Id == buildingId);
+
+            BuildingCost cost = new();
+            cost.BuildTimeMinutes = build.Time;
+            
             // TODO: get building cost from  data
             // test data
             return buildingId switch
@@ -64,37 +69,14 @@ namespace EpinelPS.LobbyServer.Outpost
         {
             ReqBuilding req = await ReadData<ReqBuilding>();
             User user = GetUser();
-            
-       
-            BuildingCost cost = GetBuildingCost(req.BuildingId);
-
-            if (!user.CanSubtractCurrency(CurrencyType.Gold, cost.Gold))
-            {
-                
-                ResBuilding errorResponse = new()
-                {
-                    StartAt = 0,
-                    CompleteAt = 0
-                };
-                await WriteDataAsync(errorResponse);
-                return;
-            }
-
-            bool goldDeducted = user.SubtractCurrency(CurrencyType.Gold, cost.Gold);
-            if (!goldDeducted)
-            {
-                ResBuilding errorResponse = new()
-                {
-                    StartAt = 0,
-                    CompleteAt = 0
-                };
-                await WriteDataAsync(errorResponse);
-                return;
-            }
 
 
-            DateTime  startTime = DateTime.UtcNow;
-            DateTime  completeTime = startTime.AddMinutes(cost.BuildTimeMinutes);
+            var build = GameData.Instance.OutpostBuildingTable.Values.FirstOrDefault(x => x.Id == req.BuildingId);
+
+            DateTime startTime = DateTime.UtcNow;
+            DateTime completeTime = startTime.AddSeconds(build.Time);
+
+            ResBuilding response = new();
             
             NetUserOutpostData newBuilding = new NetUserOutpostData()
             {
@@ -115,20 +97,32 @@ namespace EpinelPS.LobbyServer.Outpost
                     break;
                 }
             }
-            
+
             if (!found)
             {
                 user.OutpostBuildings.Add(newBuilding);
             }
 
-            JsonDb.Save();
-
-            ResBuilding response = new()
+            foreach (var cost in build.Cost)
             {
-                StartAt = newBuilding.StartAt,
-                CompleteAt = newBuilding.CompleteAt
-            };
+                if (cost.CostType == CostType.Item)
+                {
+                    ItemData box = user.Items.Where(x => x.ItemType == cost.CostId).FirstOrDefault() ?? throw new InvalidDataException("未发现物品 " + cost.CostId);
+                    box.Count -= cost.CostValue;
+                    if (box.Count == 0) user.Items.Remove(box);
+
+                    response.ItemList.Add(new NetUserItemData()
+                    {
+                        Tid = cost.CostId,
+                        Count = cost.CostValue
+                    });
+                }
+            }
             
+            response.StartAt = newBuilding.StartAt;
+            response.CompleteAt = newBuilding.CompleteAt;
+
+            JsonDb.Save();
             await WriteDataAsync(response);
         }
     }

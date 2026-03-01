@@ -83,6 +83,10 @@ namespace EpinelPS.LobbyServer.Character.Counsel
 
             response.Items.AddRange(NetUtils.GetUserItems(user));
 
+            user.AddTrigger(Trigger.CharacterAttractivePresent, 1);
+
+            user.AddTrigger(Trigger.CharacterAttractiveLevelMax, bondInfo.Lv, 0);
+
             JsonDb.Save();
 
             await WriteDataAsync(response);

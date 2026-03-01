@@ -23,8 +23,13 @@ namespace EpinelPS.LobbyServer.TriggerController
             ResSyncTrigger response = new();
             Console.WriteLine("needs " + req.Seq);
 
+            
+
             // Look for triggers past that amount
             TriggerModel[] newTriggers = [.. user.Triggers.Where(x => x.Id > req.Seq)];
+
+            Logging.WriteLine($"[TriggerSync]数量{newTriggers.Length}");
+
 
             // Return all triggers
             int triggerCount = 0;

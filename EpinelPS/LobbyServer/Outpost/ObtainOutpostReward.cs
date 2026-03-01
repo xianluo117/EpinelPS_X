@@ -14,8 +14,10 @@ namespace EpinelPS.LobbyServer.Outpost
 
             ResObtainOutpostBattleReward response = new();
 
+            TimeSpan maxTime = TimeSpan.FromHours(24);
+            TimeSpan getTime = DateTime.UtcNow - user.BattleTime;
+            TimeSpan battleTime = getTime > maxTime ? maxTime : getTime;
 
-            TimeSpan battleTime = DateTime.UtcNow - user.BattleTime;
             long battleTimeMs = (long)(battleTime.TotalNanoseconds / 100);
             long overBattleTime = battleTimeMs > 864000000000 ? battleTimeMs - 864000000000 : 0;
 

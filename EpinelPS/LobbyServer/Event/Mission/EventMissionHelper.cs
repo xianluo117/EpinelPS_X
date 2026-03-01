@@ -6,6 +6,7 @@ using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
 using log4net;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Ocsp;
 using static EpinelPS.ResGetEventMissionClearList.Types;
 
 namespace EpinelPS.LobbyServer.Event.Mission
@@ -20,14 +21,18 @@ namespace EpinelPS.LobbyServer.Event.Mission
             if (!user.EventMissionInfo.TryGetValue(eventId, out var userEvent)) return clearData;
             log.Debug($"GetClear UserEvent: {JsonConvert.SerializeObject(userEvent)}");
             int dateDay = user.GetDateDay();
+
+            var dailyEventManagers = GameData.Instance.eventManagers.Values.Where(de => de.EventSystemType == EventSystemType.DailyMissionEvent).ToList();
+            var dailyEventIds = dailyEventManagers.Select(de => de.Id).ToList();
             // Check if it's a new day, reset daily missions
-            if (userEvent.LastDay != dateDay)
+            if (userEvent.LastDay != dateDay && !dailyEventIds.Contains(eventId))
             {
                 ResetUserDailyMission(user, eventId, dateDay);
             }
 
             foreach (var id in userEvent.DailyMissionIdList)
             {
+                Logging.WriteLine($"添加已完成事件每日任务id{id}",LogType.Info);
                 clearData.Add(new NetEventMissionClearData()
                 {
                     EventId = eventId,
@@ -45,6 +50,7 @@ namespace EpinelPS.LobbyServer.Event.Mission
                     CreatedAt = userEvent.LastDate
                 });
             }
+            Logging.WriteLine($"【debug】事件{eventId}最终已完成任务id {clearData}", LogType.Info);
             return clearData;
         }
 
@@ -58,12 +64,38 @@ namespace EpinelPS.LobbyServer.Event.Mission
                 {
                     EventId = eventId
                 };
-                clearData.EventMissionClearList.AddRange(GetCleared(user, eventId));
+
+                var cleared = GetCleared(user, eventId);
+                Logging.WriteLine($"【debug】事件任务完成id {cleared}", LogType.Info);
+                clearData.EventMissionClearList.AddRange(cleared);
+                
             }
 
             return clearDatas;
         }
 
+        public static void GetClearedList_N(User user, RepeatedField<int> eventIds,ref ResGetEventMissionClearList ret)
+        {
+            var clearDatas = new RepeatedField<NestEventMissionClear>();
+            if (eventIds.Count != 0)
+            {
+                foreach (var eventId in eventIds)
+                {
+                    var clearData = new NestEventMissionClear
+                    {
+                        EventId = eventId
+                    };
+
+                    var cleared = GetCleared(user, eventId);
+                    if (cleared.Count != 0)
+                    {
+                        Logging.WriteLine($"【debug】事件任务完成id {cleared}", LogType.Info);
+                        clearData.EventMissionClearList.AddRange(cleared);
+                        ret.ResGetEventMissionClearMap.Add(clearData);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Obtain reward for event mission

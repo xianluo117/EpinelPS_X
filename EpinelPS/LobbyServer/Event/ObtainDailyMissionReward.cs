@@ -30,10 +30,11 @@ namespace EpinelPS.LobbyServer.Event
                 PassPoint = new()
             };
 
-            //EventMissionData userEvent = GetUserEventMissionData(user, req.EventId);
-            //int dateDay = user.GetDateDay();
-
-            //userEvent.LastDay = dateDay;
+            EventMissionData userEvent = GetUserEventMissionData(user, req.EventId);
+            int dateDay = user.GetDateDay();
+            Timestamp timeStamp = Timestamp.FromDateTime(DateTime.UtcNow);
+            userEvent.LastDay = dateDay;
+            userEvent.LastDate = timeStamp.ToDateTime().Ticks;
 
             foreach (int item in req.DailyEventId)
             {
@@ -49,19 +50,30 @@ namespace EpinelPS.LobbyServer.Event
                     RewardRecord rewardRecord = GameData.Instance.GetRewardTableEntry(record.RewardId) ?? throw new Exception("unable to lookup reward");
                     RegisterRewards(user, rewardRecord,ref rewards);
                 }
+                
+                user.AddTrigger(Trigger.DailyEventClear, 1, record.EventPhaseGroupId);
+                user.AddTrigger(Trigger.EventPoint, 1, req.EventId);
+                //user.EventMissionInfo[req.EventId].MissionIdList.Add(item);
 
-                // if (!userEvent.DailyMissionIdList.Contains(item))
-                // {
-                //     Logging.WriteLine($"[ObtainDailyEventReward] 添加已完成事件任务ID：{item}", LogType.Info);
-                //     userEvent.DailyMissionIdList.Add(item);
-                // }
+                if (!userEvent.MissionIdList.Contains(item))
+                {
+                    Logging.WriteLine($"[ObtainDailyEventReward] 添加已完成事件任务ID：{item}", LogType.Info);
+                    userEvent.MissionIdList.Add(item);
+                }
+
+                if (record.EventPhaseType == EventPhaseType.Final)
+                {
+                    userEvent.AllClear = true;
+                }
             }
 
             //userEvent.LastDate = Timestamp.FromDateTime(DateTime.UtcNow).ToDateTime().Ticks;
 
-            //user.EventMissionInfo[req.EventId] = userEvent;
+            user.EventMissionInfo[req.EventId] = userEvent;
 
             response.Reward = rewards;
+            
+            
 
             JsonDb.Save();
 
@@ -93,6 +105,7 @@ namespace EpinelPS.LobbyServer.Event
                 while (newXp >= newLevelExp)
                 {
                     newLevel++;
+                    user.AddTrigger(Trigger.UserLevel, newLevel, 0);
                     newGems += 30;
                     newXp -= newLevelExp;
                     if (user.Currency.ContainsKey(CurrencyType.FreeCash))

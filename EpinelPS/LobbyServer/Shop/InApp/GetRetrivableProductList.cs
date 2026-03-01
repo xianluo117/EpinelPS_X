@@ -14,10 +14,10 @@ namespace EpinelPS.LobbyServer.Shop.InApp
 
             Logging.WriteLine($"GetRetrivableProductList: {x}", LogType.Warning);
 
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
 
-            GameData.Instance.InAppShopManagerRecords.Values
-                //.Where(csp => csp.StartDate <= now && now <= csp.EndDate )
+            /*GameData.Instance.InAppShopManagerRecords.Values
+                .Where(csp => csp.StartDate <= now && now <= csp.EndDate )
                 .Where(csp => csp.IsHideIfNotValid==true)
                 .OrderBy(csp => csp.OrderGroupId)
                 .ThenBy(csp => csp.Id)
@@ -31,7 +31,7 @@ namespace EpinelPS.LobbyServer.Shop.InApp
                         
                     });
 
-                });
+                });*/
            
 
             // TODO

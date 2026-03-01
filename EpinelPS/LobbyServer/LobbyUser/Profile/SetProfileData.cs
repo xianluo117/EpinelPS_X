@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Profile
 {
     [PacketPath("/user/setprofiledata")]
     public class SetProfileData : LobbyMsgHandler

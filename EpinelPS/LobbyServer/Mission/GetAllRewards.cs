@@ -15,7 +15,7 @@ namespace EpinelPS.LobbyServer.Mission
             response.AchievementIds.Add(user.CompletedAchievements);
             response.WeeklyIds.Add(user.WeeklyResetableData.CompletedWeeklyMissions);
             response.DailyIds.Add(user.ResetableData.CompletedDailyMissions);
-
+            
             await WriteDataAsync(response);
         }
     }

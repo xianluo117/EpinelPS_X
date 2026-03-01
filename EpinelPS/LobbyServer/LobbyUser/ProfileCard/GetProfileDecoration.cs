@@ -1,4 +1,5 @@
-﻿using EpinelPS.Utils;
+﻿using EpinelPS.Database;
+using EpinelPS.Utils;
 using log4net.Layout;
 
 namespace EpinelPS.LobbyServer.LobbyUser.ProfileCard
@@ -9,30 +10,35 @@ namespace EpinelPS.LobbyServer.LobbyUser.ProfileCard
         protected override async Task HandleAsync()
         {
             ReqProfileCardDecorationLayout req = await ReadData<ReqProfileCardDecorationLayout>();
-            User user = GetUser();
+            User? user = GetUser((ulong)req.TargetUsn);
+            Logging.WriteLine($"[GetProfileDecoration] {req.TargetUsn}");
+            ResProfileCardDecorationLayout res = new();
 
-            ResProfileCardDecorationLayout r = new();
+            Logging.WriteLine($"[GetProfileDecoration] BackgroundId: {user.DecorationLayout.BackgroundId},ShowSpine: {user.DecorationLayout.ShowCharacterSpine}");
 
             if (user.DecorationLayout.BackgroundId != 0)
             {
-                r = new()
+                res = new()
                 {
                     Layout = user.DecorationLayout
                 };
             }
             else
             {
-                r = new()
+                res = new()
                 {
                     Layout = new ProfileCardDecorationLayout
                     {
-                        BackgroundId = 101002,
+                        BackgroundId = 101001,
                         ShowCharacterSpine = true
                     }
                 };
+                user.DecorationLayout.BackgroundId = 101001;
+                user.DecorationLayout.ShowCharacterSpine = true;
             }
 
-            await WriteDataAsync(r);
+            JsonDb.Save();
+            await WriteDataAsync(res);
         }
     }
 }

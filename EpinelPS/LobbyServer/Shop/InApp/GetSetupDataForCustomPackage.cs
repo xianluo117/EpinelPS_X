@@ -9,6 +9,8 @@ namespace EpinelPS.LobbyServer.Shop.InApp
         {
             ReqGetCustomPackageSetupData req = await ReadData<ReqGetCustomPackageSetupData>();
 
+            Logging.WriteLine($"GetCharacterAttractiveList: {req.InAppShopId}", LogType.Warning);
+
             ResGetCustomPackageSetupData response = new();
 
             // TODO: Validate response from real server and pull info from user info

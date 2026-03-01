@@ -8,6 +8,7 @@ namespace EpinelPS.LobbyServer.LobbyUser
     {
         protected override async Task HandleAsync()
         {
+            //设置大厅BGM
             ReqSetWallpaper req = await ReadData<ReqSetWallpaper>();
             ResSetWallpaper response = new();
             User user = GetUser();

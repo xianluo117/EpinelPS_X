@@ -194,7 +194,7 @@ namespace EpinelPS.LobbyServer.Stage
                 user.AddTrigger(Trigger.ObtainCharacter, 1, 1015);
                 user.AddTrigger(Trigger.ObtainCharacter, 1, 1014);
                 user.AddTrigger(Trigger.ObtainCharacter, 1, 3005);
-                user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                user.AddTrigger(Trigger.ObtainCharacterNew, 1, 0);
 
                 NetTeamData team1Sub = new()
                 {

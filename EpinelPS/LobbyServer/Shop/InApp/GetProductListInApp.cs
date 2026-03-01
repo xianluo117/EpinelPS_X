@@ -1,4 +1,5 @@
-﻿using EpinelPS.Utils;
+﻿using EpinelPS.Data;
+using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Shop.InApp
 {
@@ -12,8 +13,23 @@ namespace EpinelPS.LobbyServer.Shop.InApp
             Logging.WriteLine($"inappshop GetProductData{x}");
 
             ResGetInAppShopData response = new();
+
+            var shoplist = GameData.Instance.InAppShopManagerRecords.Values.Where(x => x.EndDate > DateTime.UtcNow);
+
+            foreach (var shop in shoplist)
+            {
+                response.InAppShopDataList.Add(new NetInAppShopData()
+                {
+                    Id = shop.Id, StartDate = DateTime.Now.AddDays(-5).Ticks, EndDate = DateTime.Now.AddDays(10).Ticks
+                });
+            }
+
+            //todo
+            response.BuyDataList.Add(new NetInAppShopBuyData()
+            {
+                
+            });
             
-            response.InAppShopDataList.Add(new NetInAppShopData() { Id = 20002, StartDate = DateTime.Now.AddDays(-5).Ticks, EndDate = DateTime.Now.AddDays(10).Ticks });
             
             await WriteDataAsync(response);
         }

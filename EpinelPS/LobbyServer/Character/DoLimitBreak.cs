@@ -7,6 +7,7 @@ namespace EpinelPS.LobbyServer.Character
     [PacketPath("/character/upgrade")]
     public class DoLimitBreak : LobbyMsgHandler
     {
+        //极限突破
         protected override async Task HandleAsync()
         {
             // Read the incoming request that contains the current CSN and ISN
@@ -17,14 +18,17 @@ namespace EpinelPS.LobbyServer.Character
             // Get all character data from the game's character table
             List<CharacterRecord> fullchardata = [.. GameData.Instance.CharacterTable.Values];
 
-            CharacterModel targetCharacter = user.GetCharacterBySerialNumber(req.Csn) ?? throw new NullReferenceException();
+            CharacterModel targetCharacter =
+                user.GetCharacterBySerialNumber(req.Csn) ?? throw new NullReferenceException();
 
             // Find the element with the current csn from the request
-            CharacterRecord currentCharacter = fullchardata.FirstOrDefault(c => c.Id == targetCharacter.Tid) ?? throw new NullReferenceException();
+            CharacterRecord currentCharacter = fullchardata.FirstOrDefault(c => c.Id == targetCharacter.Tid) ??
+                                               throw new NullReferenceException();
 
             if (currentCharacter != null && targetCharacter != null)
             {
-                if (currentCharacter.GradeCoreId == 103 || currentCharacter.GradeCoreId == 11 || currentCharacter.GradeCoreId == 201)
+                if (currentCharacter.GradeCoreId == 103 || currentCharacter.GradeCoreId == 11 ||
+                    currentCharacter.GradeCoreId == 201)
                 {
                     Console.WriteLine("cannot limit break any further!");
                     await WriteDataAsync(response);
@@ -33,7 +37,9 @@ namespace EpinelPS.LobbyServer.Character
 
                 // Find a new CSN based on the `NameCode` of the current character and `GradeCoreId + req.Count`
                 // For some reason, there is a seperate character for each limit/core break value.
-                CharacterRecord? newCharacter = fullchardata.FirstOrDefault(c => c.NameCode == currentCharacter.NameCode && c.GradeCoreId == currentCharacter.GradeCoreId + req.Count);
+                CharacterRecord? newCharacter = fullchardata.FirstOrDefault(c =>
+                    c.NameCode == currentCharacter.NameCode &&
+                    c.GradeCoreId == currentCharacter.GradeCoreId + req.Count);
 
 
                 if (newCharacter != null)
@@ -55,17 +61,30 @@ namespace EpinelPS.LobbyServer.Character
                     };
 
                     // remove spare body item
-                    ItemData bodyItem = user.Items.FirstOrDefault(i => i.Isn == req.Isn) ?? throw new NullReferenceException();
+                    ItemData bodyItem = user.Items.FirstOrDefault(i => i.Isn == req.Isn) ??
+                                        throw new NullReferenceException();
                     user.RemoveItemBySerialNumber(req.Isn, req.Count);
                     response.Items.Add(NetUtils.ToNet(bodyItem));
 
-                    user.AddTrigger(Trigger.CharacterLevelUpCount, 1);
+                    user.AddTrigger(Trigger.CharacterGradeUpCount, 1);
+
+
+                    if (newCharacter.GradeCoreId == 103 || newCharacter.GradeCoreId == 11 || newCharacter.GradeCoreId == 201)
+                    {
+                        LiveWallpaperRecord? wallpaper = GameData.Instance.LiveWallpaperTable.Values.Where(x =>
+                                x.ConditionType == Condition_type.Character && x.ConditionId == newCharacter.Id)
+                            .FirstOrDefault();
+                       user.LiveWallpaperList.Add(wallpaper.Id);
+                    }
+
+
                     JsonDb.Save();
                 }
             }
 
             // Send the response back to the client
             await WriteDataAsync(response);
+
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using EpinelPS.Database;
 using EpinelPS.Utils;
 
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Profile
 {
     [PacketPath("/user/setprofileicon")]
     public class SetProfileIcon : LobbyMsgHandler

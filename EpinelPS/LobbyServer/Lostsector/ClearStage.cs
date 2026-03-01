@@ -37,6 +37,7 @@ namespace EpinelPS.LobbyServer.Lostsector
             var stage = mapInfo.StageSpawner.Where(x => x.StageId == stageId).FirstOrDefault() ?? throw new Exception("cannot find stage in map data");
 
             user.LostSectorData[sector].ClearedStages.Add(stage.PositionId, stageId);
+            user.AddTrigger(Trigger.LostSectorClear, 1,sector);
         }
     }
 }

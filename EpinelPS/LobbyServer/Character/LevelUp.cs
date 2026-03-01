@@ -37,6 +37,7 @@ namespace EpinelPS.LobbyServer.Character
                         user.SubtractCurrency(CurrencyType.CharacterExp, requiredBattleData);
                         user.SubtractCurrency(CurrencyType.CharacterExp2, requiredCoreDust);
                         item.Level = req.Lv;
+
                     }
                     else
                     {
@@ -56,6 +57,9 @@ namespace EpinelPS.LobbyServer.Character
                         Tid = item.Tid
                     };
                     List<CharacterModel> highestLevelCharacters = [.. user.Characters.OrderByDescending(x => x.Level).Take(5)];
+
+                    int curlevel = (item.Level / 10) * 10;
+                    user.AddTrigger(Trigger.CharacterLevelMax, curlevel, 0);
 
                     response.SynchroLv = user.GetSynchroLevel();
 
@@ -78,5 +82,9 @@ namespace EpinelPS.LobbyServer.Character
 
             await WriteDataAsync(response);
         }
+
+
+
+        
     }
 }

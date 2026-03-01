@@ -128,10 +128,12 @@ namespace EpinelPS.LobbyServer.Event.Shop
                 }
                 else if (shopProduct.GoodsType == RewardType.UserTitle)
                 {
+                    user.AddUnique(user.TitleList, shopProduct.GoodsId);
                     response.Product.UserTitleList.Add(shopProduct.GoodsId);
                 }
                 else if (shopProduct.GoodsType == RewardType.LiveWallpaper)
                 {
+                    user.AddUnique(user.LiveWallpaperList, shopProduct.GoodsId);
                     response.Product.LiveWallPapers.Add(shopProduct.GoodsId);
                 }
                 else
@@ -220,6 +222,18 @@ namespace EpinelPS.LobbyServer.Event.Shop
                     return eventRecord.ContentsShopId;
                 }
             }
+            else
+            {
+                var eventRecord2 = GameData.Instance.eventManagers.Values.FirstOrDefault(r => r.Id == eventId);
+                if (eventRecord2 != null)
+                {
+                    if (eventRecord2.EventSystemType == EventSystemType.ShopEvent)
+                    {
+                        return Convert.ToInt32(eventRecord2.EventShortcutId);
+                    }
+                }
+            }
+
             log.Warn($"EventStoryTable not found for EventId: {eventId}");
             return 0;
         }

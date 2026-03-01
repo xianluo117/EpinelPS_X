@@ -9,11 +9,12 @@ namespace EpinelPS.LobbyServer.Character
         protected override async Task HandleAsync()
         {
             ReqGetCharacterCostumeData req = await ReadData<ReqGetCharacterCostumeData>();
-
+            User user = GetUser();
             ResGetCharacterCostumeData response = new();
 
+            response.CostumeIds.AddRange(user.CostumeList);
             // return all
-            response.CostumeIds.AddRange(GameData.Instance.GetAllCostumes());
+            // response.CostumeIds.AddRange(GameData.Instance.GetAllCostumes());
 
             await WriteDataAsync(response);
         }

@@ -30,7 +30,9 @@ namespace EpinelPS.LobbyServer.Outpost
 
 
             // Directly use jukeboxListDataRecords
-            List<int> jukeboxIds = [.. GameData.Instance.jukeboxListDataRecords.Keys];
+            //List<int> jukeboxIds = [.. GameData.Instance.jukeboxListDataRecords.Keys];
+
+            List<int> jukeboxIds = user.JukeboxBgm;
 
             // Update response lists with the IDs
             response.Jukeboxv2.JukeboxTableIds.AddRange(jukeboxIds);

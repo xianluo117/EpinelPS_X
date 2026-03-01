@@ -69,12 +69,22 @@ public class User
     public NetWallpaperJukeboxFavorite[] WallpaperFavoriteList = [];
     public NetWallpaperPlaylist[] WallpaperPlaylistList = [];
     public NetWallpaperJukebox[] WallpaperJukeboxList = [];
+
+    //大厅装饰
     public List<int> LobbyDecoBackgroundList = [];
+    public List<int> LiveWallpaperList = [];
+
+    //角色时装
+    public List<int> CostumeList = [];
 
     //个人面板
     public List<int> StickerList = [];
     public List<int> BackgroundList = [];
     public ProfileCardDecorationLayout DecorationLayout = new ();
+    public List<int> IconList = [];
+    public List<int> FrameList = [];
+    public List<int> TitleList = [];
+
 
     public Dictionary<int, long> InterceptRecord = [];
     
@@ -114,6 +124,7 @@ public class User
     public List<TriggerModel> Triggers = [];
     public int LastTriggerId = 1;
     public List<int> CompletedAchievements = [];
+    public List<int> JukeboxMissionList = [];
     public List<NetMessage> MessengerData = [];
     public ulong LastMessageId = 1;
     public long LastBadgeSeq = 1;
@@ -137,6 +148,9 @@ public class User
     // solo raid data
     public Dictionary<int, SoloRaidInfo> SoloRaidData = []; // key: raidId
 
+    //shop
+    public Dictionary<int, ShopBuyCountData> ShopBuyCountInfo = []; // key: eventId
+
     public TriggerModel AddTrigger(Trigger type, int value, int conditionId = 0)
     {
         TriggerModel t = new()
@@ -151,6 +165,78 @@ public class User
         Triggers.Add(t);
 
         return t;
+    }
+
+    // 添加前检查是否已存在
+    public void AddUnique(List<int> list,int number)
+    {
+        if (!list.Contains(number))
+        {
+            list.Add(number);
+        }
+    }
+
+    /// <summary>
+    /// 修改指定触发的值 和 ConditionId
+    /// </summary>
+    /// <param name="type">触发类型</param>
+    /// <param name="newValue">值</param>
+    /// <param name="conditionId">条件Id</param>
+    /// <param name="IsAdd">修改值的方式,true 是添加，false 是设置</param>
+    public void ChangeTriggerValue(Trigger type, int newValue, int conditionId = 0,bool IsAdd = false)
+    {
+        var count = Triggers.Count(t => t.Type == type && t.ConditionId == conditionId);
+        if (count > 1)
+        {
+            Logging.WriteLine($"这种类型{type}的触发存在多条记录，只修改第一条！",LogType.Warning);
+            var triggers = Triggers.FirstOrDefault(t => t.Type == type);
+            if (IsAdd)
+            {
+                if (triggers != null && newValue > 0)
+                {
+                    triggers.Value += newValue;
+                    triggers.CreatedAt = DateTime.UtcNow.AddHours(9).Ticks;
+                }
+            }
+
+            else
+            {
+                if (triggers != null && newValue > triggers.Value)
+                {
+                    triggers.Value = newValue;
+                    triggers.CreatedAt = DateTime.UtcNow.AddHours(9).Ticks;
+                }
+            }
+        }
+        else if (count==1)
+        {
+
+            Logging.WriteLine($"这种类型{type}的触发记录只有一条！", LogType.Info);
+            var triggers = Triggers.FirstOrDefault(t => t.Type == type);
+            if (IsAdd)
+            {
+                if (newValue > 0)
+                {
+                    triggers.Value += newValue;
+                    triggers.CreatedAt = DateTime.UtcNow.AddHours(9).Ticks;
+                }
+            }
+
+            else
+            {
+                if (newValue > triggers.Value)
+                {
+                    triggers.Value = newValue;
+                    triggers.CreatedAt = DateTime.UtcNow.AddHours(9).Ticks;
+                }
+            }
+
+        }
+        else
+        {
+            Logging.WriteLine($"这种类型{type}的触发不存在，添加记录！", LogType.Error);
+            AddTrigger(type, newValue, conditionId);
+        }
     }
 
     public BadgeModel AddBadge(BadgeContents type, string location)

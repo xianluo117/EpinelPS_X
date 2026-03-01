@@ -9,9 +9,10 @@ namespace EpinelPS.LobbyServer.Mission
     {
         protected override async Task HandleAsync()
         {
+            //获取成就奖励
             ReqObtainAchievementReward req = await ReadData<ReqObtainAchievementReward>();
             User user = GetUser();
-
+            
             ResObtainAchievementReward response = new();
 
             List<NetRewardData> rewards = [];
@@ -33,10 +34,6 @@ namespace EpinelPS.LobbyServer.Mission
 
                 total_points++;
             }
-
-            user.InfraCoreExp += 10 * total_points;
-
-            user.InfraCoreLvl = GameData.Instance.GetInfraCoreLev(user.InfraCoreExp);
 
             user.AddTrigger(Trigger.PointRewardAchievement, total_points);
 

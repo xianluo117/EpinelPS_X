@@ -101,6 +101,7 @@ namespace EpinelPS.Models
         public List<int> DailyMissionIdList = [];
         public int LastDay = 0; // yyyyMMdd
         public long LastDate = 0; // Default value for LastDate
+        public bool AllClear = false;//存储活动事件是否完成
     }
     // EventShopBuyCountData
     public class EventShopProductData
@@ -112,6 +113,13 @@ namespace EpinelPS.Models
     public class EventShopBuyCountData
     {
         public int EventId = 0; 
+        public List<EventShopProductData> datas = [];
+    }
+
+    public class ShopBuyCountData
+    {
+        public int ShopCategory = 0;
+        public int LastDay = 0; // yyyyMMdd
         public List<EventShopProductData> datas = [];
     }
 

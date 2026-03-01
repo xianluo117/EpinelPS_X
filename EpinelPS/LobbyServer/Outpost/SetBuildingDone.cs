@@ -11,9 +11,12 @@ namespace EpinelPS.LobbyServer.Outpost
             User user = GetUser();
 
             ResBuildingIsDone response = new();
-          
-
-
+            
+            var build = user.OutpostBuildings.Where(x => x.SlotId == req.PositionId).FirstOrDefault() ?? throw new InvalidDataException("未发现建筑 " + req.PositionId);
+            build.IsDone = true;
+            response.ConditionTriggerTidList.Add(build.BuildingId);
+            response.BuildingId = build.BuildingId;
+           
             await WriteDataAsync(response);
         }
     }

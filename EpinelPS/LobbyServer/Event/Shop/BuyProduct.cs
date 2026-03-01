@@ -14,12 +14,14 @@ namespace EpinelPS.LobbyServer.Event.Shop
             try
             {
                 EventShopHelper.BuyShopProduct(user, ref response, req);
+                response.Result = EventShopBuyProductResult.Success;
             }
             catch (Exception ex)
             {
                 Logging.WriteLine($"Error buying shop product: {ex.Message}", LogType.Error);
             }
 
+           
             await WriteDataAsync(response);
         }
     }

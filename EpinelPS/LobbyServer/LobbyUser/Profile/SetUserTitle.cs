@@ -1,6 +1,6 @@
 using EpinelPS.Utils;
 using EpinelPS.Database;
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Profile
 {
     [PacketPath("/lobby/usertitle/set")]
     public class SetUserTitleData : LobbyMsgHandler

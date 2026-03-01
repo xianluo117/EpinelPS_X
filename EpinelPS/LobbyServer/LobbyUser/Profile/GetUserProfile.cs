@@ -1,6 +1,6 @@
 ﻿using EpinelPS.Utils;
 
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Profile
 {
     [PacketPath("/User/GetProfile")]
     public class GetUserProfile : LobbyMsgHandler

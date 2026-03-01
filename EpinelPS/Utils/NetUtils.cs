@@ -288,6 +288,13 @@ namespace EpinelPS.Utils
                 Value = CalcOutpostRewardAmount(battleData.UserExp, 3, 1, duration.TotalMinutes)
             });
 
+            //TODO
+            // result.Item.Add(new NetItemData()
+            //     {
+            //         
+            //     }
+            // );
+
             return result;
         }
 
@@ -315,6 +322,7 @@ namespace EpinelPS.Utils
                         while (newXp >= newLevelExp)
                         {
                             newLevel++;
+                            user.AddTrigger(Trigger.UserLevel, newLevel, 0);
                             newGems += 30;
                             newXp -= newLevelExp;
                             if (user.Currency.ContainsKey(CurrencyType.FreeCash))

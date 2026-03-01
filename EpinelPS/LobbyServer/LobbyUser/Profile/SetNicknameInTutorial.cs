@@ -1,18 +1,18 @@
 ﻿using EpinelPS.Database;
 using EpinelPS.Utils;
 
-namespace EpinelPS.LobbyServer.LobbyUser
+namespace EpinelPS.LobbyServer.LobbyUser.Profile
 {
-    [PacketPath("/user/setnickname")]
-    public class SetNickname : LobbyMsgHandler
+    [PacketPath("/User/SetNickNameInTutorial")]
+    public class SetNicknameInTutorial : LobbyMsgHandler
     {
         protected override async Task HandleAsync()
         {
-            ReqSetNickname req = await ReadData<ReqSetNickname>();
+            ReqSetNicknameInTutorial req = await ReadData<ReqSetNicknameInTutorial>();
             User user = GetUser();
             user.Nickname = req.Nickname;
 
-            ResSetNickname response = new()
+            ResSetNicknameInTutorial response = new()
             {
                 Result = SetNicknameResult.Okay,
                 Nickname = req.Nickname

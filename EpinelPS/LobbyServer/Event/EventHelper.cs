@@ -39,7 +39,7 @@ namespace EpinelPS.LobbyServer.Event
                 AddEvents(ref response, challengeEvents);
             }
             // add daily mission events
-            List<NetEventData> dailyMissionEvents = GetDailyMissionEventData(eventManagers);
+            List<NetEventData> dailyMissionEvents = GetDailyMissionEventData(user,eventManagers);
             log.Debug($"Found {dailyMissionEvents.Count} associated daily mission events: {JsonConvert.SerializeObject(dailyMissionEvents)}");
             AddEvents(ref response, dailyMissionEvents);
         }
@@ -75,7 +75,7 @@ namespace EpinelPS.LobbyServer.Event
                 AddJoinedEvents(ref response, challengeEvents);
             }
             // add daily mission events
-            List<NetEventData> dailyMissionEvents = GetDailyMissionEventData(eventManagers);
+            List<NetEventData> dailyMissionEvents = GetDailyMissionEventData(user,eventManagers);
             log.Debug($"Found {dailyMissionEvents.Count} associated daily mission events: {JsonConvert.SerializeObject(dailyMissionEvents)}");
             AddJoinedEvents(ref response, dailyMissionEvents);
         }
@@ -246,7 +246,6 @@ namespace EpinelPS.LobbyServer.Event
                     if (eventData.EventEndDate == 0) eventData.EventEndDate = DateTime.UtcNow.AddDays(30).Ticks;
                     response.EventWithJoinData.Add(new NetEventWithJoinData()
                     {
-                        
                         EventData = eventData,
                         JoinAt = 0
                     });
@@ -258,13 +257,45 @@ namespace EpinelPS.LobbyServer.Event
             }
         }
 
-        private static List<NetEventData> GetDailyMissionEventData(List<EventManagerRecord> eventManagers)
+        private static List<NetEventData> GetDailyMissionEventData(User user, List<EventManagerRecord> eventManagers)
         {
             List<NetEventData> events = [];
 
-            var dailyEventIds = GameData.Instance.DailyMissionEventSettingTable.Values.Select(de => de.EventId).ToList();
-            log.Debug($"Daily Mission Event IDs: {JsonConvert.SerializeObject(dailyEventIds)}");
-            var dailyEvents = eventManagers.Where(em => dailyEventIds.Contains(em.Id)).ToList();
+            //var dailyEventIds = GameData.Instance.DailyMissionEventSettingTable.Values.Select(de => de.EventId).ToList();
+            List<int> fanalEventIds = new List<int>();    
+
+            foreach (var daily in GameData.Instance.DailyMissionEventSettingTable.Values)
+            {
+                if (daily.OpenConditionDailyEventId==0)
+                {
+                    fanalEventIds.Add(daily.EventId);
+                }
+                else
+                {
+                    var sel = GameData.Instance.DailyEventTable.Values.FirstOrDefault(x =>x.Id==daily.OpenConditionDailyEventId);
+                    if (user.EventMissionInfo.TryGetValue(sel.EventId, out var value))
+                    {
+                        if (value.MissionIdList.Contains(daily.OpenConditionDailyEventId))
+                        {
+                            fanalEventIds.Add(daily.EventId);
+                        }
+                        else
+                        {
+                            Logging.WriteLine($"新指挥官支援活动{daily.EventId}前置条件未满足，不添加。", LogType.Warning);
+                        }
+                    }
+                    else
+                    {
+                        Logging.WriteLine($"新指挥官支援活动{daily.EventId}前置条件未满足，不添加。", LogType.Warning);
+                    }
+
+                   
+                }
+            }
+
+
+            log.Debug($"Daily Mission Event IDs: {JsonConvert.SerializeObject(fanalEventIds)}");
+            var dailyEvents = eventManagers.Where(em => fanalEventIds.Contains(em.Id)).ToList();
             log.Debug($"Found {dailyEvents.Count} daily events: {JsonConvert.SerializeObject(dailyEvents)}");
             if (dailyEvents.Count == 0)
             {
@@ -275,18 +306,43 @@ namespace EpinelPS.LobbyServer.Event
             // Add each daily event to the list
             foreach (var dailyEvent in dailyEvents)
             {
-                events.Add(new NetEventData()
+                if (user.EventMissionInfo.TryGetValue(dailyEvent.Id, out var value))
                 {
-                    Id = dailyEvent.Id,
-                    EventSystemType = (int)dailyEvent.EventSystemType,
-                    EventStartDate = DateTime.UtcNow.AddDays(-7).Ticks,
-                    EventVisibleDate = DateTime.UtcNow.AddDays(-7).Ticks,
-                    EventDisableDate = DateTime.UtcNow.AddDays(30).Ticks,
-                    EventEndDate = DateTime.UtcNow.AddDays(30).Ticks
-                });
+                    if (!value.AllClear)
+                    {
+                        events.Add(new NetEventData()
+                        {
+                            Id = dailyEvent.Id,
+                            EventSystemType = (int)dailyEvent.EventSystemType,
+                            EventStartDate = DateTime.UtcNow.AddDays(-15).Ticks,
+                            EventVisibleDate = DateTime.UtcNow.AddDays(-15).Ticks,
+                            EventDisableDate = DateTime.UtcNow.AddDays(10).Ticks,
+                            EventEndDate = DateTime.UtcNow.AddDays(10).Ticks
+                        });
+                    }
+                    else
+                    {
+                        Logging.WriteLine($"新指挥官支援活动{dailyEvent.Id}已完成，不添加。", LogType.Warning);
+                    }
+                }
+                else
+                {
+                    Logging.WriteLine($"新指挥官支援活动{dailyEvent.Id}未发现任务完成信息，已添加。", LogType.Warning);
+                    events.Add(new NetEventData()
+                    {
+                        Id = dailyEvent.Id,
+                        EventSystemType = (int)dailyEvent.EventSystemType,
+                        EventStartDate = DateTime.UtcNow.AddDays(-15).Ticks,
+                        EventVisibleDate = DateTime.UtcNow.AddDays(-15).Ticks,
+                        EventDisableDate = DateTime.UtcNow.AddDays(10).Ticks,
+                        EventEndDate = DateTime.UtcNow.AddDays(10).Ticks
+                    });
+                }
             }
             return events;
         }
+
+       
 
     }
 }

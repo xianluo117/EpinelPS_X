@@ -125,7 +125,7 @@ namespace EpinelPS.LobbyServer.Inventory
                     }
                     else
                     {
-                        user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                        user.AddTrigger(Trigger.ObtainCharacterNew, 1, 0);
                     }
 
                     if (character.OriginalRare == OriginalRareType.SSR || character.OriginalRare == OriginalRareType.SR)
@@ -134,7 +134,7 @@ namespace EpinelPS.LobbyServer.Inventory
                     }
                 }
 
-                user.AddTrigger(Trigger.GachaCharacter, 0, 0);
+                user.AddTrigger(Trigger.GachaCharacter, 1, 0);
             }
 
             reward.Currency.Add(new NetCurrencyData() { Type = (int)CurrencyType.DissolutionPoint, Value = totalBodyLabels });

@@ -8,7 +8,7 @@ namespace EpinelPS.LobbyServer.LobbyUser.ProfileCard
         protected override async Task HandleAsync()
         {
             ReqProfileCardObjectList req = await ReadData<ReqProfileCardObjectList>();
-
+           
             ResProfileCardObjectList response = new();
             User user = GetUser();
 
@@ -17,8 +17,6 @@ namespace EpinelPS.LobbyServer.LobbyUser.ProfileCard
 
             // TODO
             await WriteDataAsync(response);
-
-            
         }
     }
 }

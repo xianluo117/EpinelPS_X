@@ -11,78 +11,86 @@ namespace EpinelPS.LobbyServer.Shop
         protected override async Task HandleAsync()
         {
             ReqGetShop x = await ReadData<ReqGetShop>();
-
-            User user = GetUser();
-
-            int sc = x.ShopCategory;
-
             Logging.WriteLine($"Get Shop: {x.ShopCategory}", LogType.Info);
+            User user = GetUser();
+            
+            var shoplist = GameData.Instance.ContentsShopTable.Values.FirstOrDefault(se => (int)se.ShopCategory == x.ShopCategory);
 
-            var Shop = new NetShopProductData { ShopCategory = x.ShopCategory };
 
             ResGetShop response = new();
-            
-            ContentsShopRecord[] ShopTable = GameData.Instance.ContentsShopTable.Values
-                .Where(tx => tx.ShopCategory == (ShopCategoryType)sc)
-                .ToArray();
-
-            if (ShopTable.Length <= 0)
-            {
-                throw new Exception($"未找到记录: ShopCategory = {(ShopCategoryType)sc}");
-            }
-            else if (ShopTable.Length == 1)
-            {
-                Shop.ShopTid = ShopTable[0].Id;
-
-                GameData.Instance.ContentsShopProductTable.Values
-                    .Where(csp => csp.BundleId == ShopTable[0].BundleId).ToList().ForEach(csp =>
-                    {
-
-                        Shop.List.Add(new NetShopProductInfoData()
-                        {
-
-                            Order = csp.ProductOrder,
-                            ProductId = csp.Id,
-                            BuyLimitCount = csp.BuyLimitCount+1,
-                            BuyCount = 1,
-                            // Discount = csp.DiscountProbId,
-                        });
-                    });
-
-            }
-            else if(ShopTable.Length > 1)
-            {
-                Random random = new Random();
-                int index = random.Next(0, ShopTable.Length);
-
-                Shop.ShopTid = ShopTable[index].Id;
-
-                GameData.Instance.ContentsShopProductTable.Values
-                    .Where(csp => csp.BundleId == ShopTable[index].BundleId).ToList().ForEach(csp =>
-                    {
-
-                        Shop.List.Add(new NetShopProductInfoData()
-                        {
-
-                            Order = csp.ProductOrder,
-                            ProductId = csp.Id,
-                            BuyLimitCount = csp.BuyLimitCount,
-                            BuyCount = 1,
-                            // Discount = csp.DiscountProbId,
-                        });
-                    });
 
 
-            }
+            NetShopProductData tShopProductData = new NetShopProductData();
 
-            Logging.WriteLine($"Shop: {Shop.ShopCategory},{Shop.ShopTid}", LogType.Info);
+            tShopProductData.ShopTid = shoplist.Id;
+            tShopProductData.ShopCategory = (int)shoplist.ShopCategory;
+            tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
+            tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
+            tShopProductData.FreeRenewCount = 5;
+            tShopProductData.RenewCount = 5;
+            GetInfoData(user, x.ShopCategory, ref tShopProductData, shoplist.BundleId);
 
-            response.Shop = Shop;
 
+            response.Shop = tShopProductData;
 
             // TODO
 
             await WriteDataAsync(response);
+        }
+
+        private void GetInfoData(User user,int ShopCategory, ref NetShopProductData nspddata, int bundleId)
+        {
+            // 创建临时列表
+            List<NetShopProductInfoData> tempList = new List<NetShopProductInfoData>();
+            int dateDay = user.GetDateDay();
+
+            var products = GameData.Instance.ContentsShopProductTable.Values.Where(csp => csp.BundleId == bundleId);
+
+            var userBuyCounts = new List<EventShopProductData>();
+
+            if (user.ShopBuyCountInfo.TryGetValue(ShopCategory, out var userBuyCountInfo))
+            {
+                userBuyCounts = userBuyCountInfo.datas;
+                foreach (var csp in products)
+                {
+                    int buyCount = 0;
+                    if (userBuyCountInfo.LastDay == dateDay)
+                    {
+                        buyCount = userBuyCounts.FirstOrDefault(x => x.ProductTid == csp.Id)?.BuyCount ?? 0;
+                    }
+
+
+                    tempList.Add(new NetShopProductInfoData()
+                    {
+                        Order = csp.ProductOrder,
+                        ProductId = csp.Id,
+                        BuyLimitCount = csp.BuyLimitCount,
+                        BuyCount = buyCount,
+                        Discount = csp.DiscountProbId
+                    });
+                }
+            }
+            else
+            {
+                foreach (var csp in products)
+                {
+                    int buyCount = 0;
+                    tempList.Add(new NetShopProductInfoData()
+                    {
+                        Order = csp.ProductOrder,
+                        ProductId = csp.Id,
+                        BuyLimitCount = csp.BuyLimitCount,
+                        BuyCount = buyCount,
+                        Discount = csp.DiscountProbId
+                    });
+                }
+            }
+
+
+           
+
+            // 将临时列表添加到原对象
+            nspddata.List.AddRange(tempList);
         }
     }
 }

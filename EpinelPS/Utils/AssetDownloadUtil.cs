@@ -10,7 +10,15 @@ namespace EpinelPS.Utils
         private static string? CloudIp;
         public static async Task<string?> DownloadOrGetFileAsync(string url, CancellationToken cancellationToken)
         {
-            string rawUrl = url.Replace("https://cloud.nikke-kr.com/", "");
+            string rawUrl="";
+            if (url.StartsWith("https://"))
+            {
+                rawUrl = url.Replace("https://cloud.nikke-kr.com/", "");
+            }
+            else if (url.StartsWith("/"))
+            {
+                rawUrl = url.Substring(1);
+            }
             string targetFile = Program.GetCachePathForPath(rawUrl);
             string? targetDir = Path.GetDirectoryName(targetFile);
             if (targetDir == null)

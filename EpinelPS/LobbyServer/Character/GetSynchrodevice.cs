@@ -8,6 +8,7 @@ namespace EpinelPS.LobbyServer.Character
     {
         protected override async Task HandleAsync()
         {
+            //同步器
             ReqGetSynchroData req = await ReadData<ReqGetSynchroData>();
             User user = GetUser();
 

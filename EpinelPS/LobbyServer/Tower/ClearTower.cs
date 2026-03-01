@@ -59,18 +59,17 @@ namespace EpinelPS.LobbyServer.Tower
             {
                 user.AddTrigger(Trigger.TowerElysionClear, 1, TowerId);
             }
-            else if (record.Type== CorporationTowerType.MISSILIS)
+            else if (record.Type == CorporationTowerType.MISSILIS)
             {
                 user.AddTrigger(Trigger.TowerMissilisClear, 1, TowerId);
             }
             else if (record.Type == CorporationTowerType.OVERSPEC)
             {
-                user.AddTrigger(Trigger.TowerOverspecClear,1, TowerId);
+                user.AddTrigger(Trigger.TowerOverspecClear, 1, TowerId);
             }
             else if (record.Type == CorporationTowerType.ALL)
             {
-
-                user.AddTrigger(Trigger.TowerBasicClear,1, TowerId);
+                user.AddTrigger(Trigger.TowerBasicClear, 1, TowerId);
             }
 
             RewardRecord reward = GameData.Instance.GetRewardTableEntry(record.RewardId) ?? throw new Exception("failed to get reward");

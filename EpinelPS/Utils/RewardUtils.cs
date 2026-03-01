@@ -41,6 +41,7 @@ namespace EpinelPS.Utils
                 while (newXp >= newLevelExp)
                 {
                     newLevel++;
+                    user.AddTrigger(Trigger.UserLevel, newLevel, 0);
                     newGems += 30;
                     newXp -= newLevelExp;
                     if (user.Currency.ContainsKey(CurrencyType.FreeCash))
@@ -119,8 +120,8 @@ namespace EpinelPS.Utils
         /// <exception cref="Exception"></exception>
         public static void AddSingleObject(User user, ref NetRewardData ret, int rewardId, RewardType rewardType, int rewardCount)
         {
-            if (rewardId == 0 || rewardType == RewardType.None) return;
-
+            if (rewardType == RewardType.None) return;
+            Logging.WriteLine($"[DEBUG]奖励类型{rewardType}",LogType.Info);
             if (rewardType == RewardType.Currency)
             {
                 AddSingleCurrencyObject(user, ref ret, (CurrencyType)rewardId, rewardCount);
@@ -261,6 +262,8 @@ namespace EpinelPS.Utils
                 {
                     ret.JukeboxBgm.Add(rewardId);
                     user.JukeboxBgm.Add(rewardId);
+                    var jukebox = GameData.Instance.jukeboxListDataRecords.Values.FirstOrDefault(x => x.Id == rewardId);
+                    user.AddTrigger(Trigger.ObtainJukeboxTheme,1,jukebox.Theme);
                 }
             }
             else if (rewardType == RewardType.InfraCoreExp)
@@ -269,8 +272,10 @@ namespace EpinelPS.Utils
                 int beforeExp = user.InfraCoreExp;
 
                 user.InfraCoreExp += rewardCount;
+                user.InfraCoreLvl = GameData.Instance.GetInfraCoreLev(user.InfraCoreExp);
+                
 
-                // Check for level ups
+                /*// Check for level ups
                 Dictionary<int, InfraCoreGradeRecord> gradeTable = GameData.Instance.InfracoreTable;
                 int newLevel = user.InfraCoreLvl;
 
@@ -289,15 +294,16 @@ namespace EpinelPS.Utils
                 if (newLevel > user.InfraCoreLvl)
                 {
                     user.InfraCoreLvl = newLevel;
-                }
-
+                }*/
+                Logging.WriteLine($"基础核心经验 {user.InfraCoreExp} ,等级 {user.InfraCoreLvl}");
                 ret.InfraCoreExp = new NetIncreaseExpData()
                 {
                     BeforeLv = beforeLv,
                     BeforeExp = beforeExp,
                     CurrentLv = user.InfraCoreLvl,
                     CurrentExp = user.InfraCoreExp,
-                    GainExp = rewardCount
+                    GainExp = rewardCount,
+                    IncreaseExp = rewardCount
                 };
             }
             else if (rewardType == RewardType.ItemRandomBox)
@@ -466,13 +472,22 @@ namespace EpinelPS.Utils
                     }
                     else
                     {
-                        user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                        user.AddTrigger(Trigger.ObtainCharacterNew, 1, 0);
                     }
 
                     if (character.OriginalRare == OriginalRareType.SSR || character.OriginalRare == OriginalRareType.SR)
                     {
                         user.BondInfo.Add(new() { NameCode = character.NameCode, Lv = 1 });
                     }
+                }
+            }
+            else if (rewardType == RewardType.UserTitle)
+            {
+                UserTitleRecord? record = GameData.Instance.userTitleRecords.Values.FirstOrDefault(x => x.Id == rewardId);
+                if (record != null)
+                {
+                    ret.UserTitleList.Add(record.Id);
+                    user.TitleList.Add(record.Id);
                 }
             }
             else
@@ -1103,7 +1118,7 @@ namespace EpinelPS.Utils
                 }
                 else
                 {
-                    user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                    user.AddTrigger(Trigger.ObtainCharacterNew, 1, 0);
                 }
 
                 if (character.OriginalRare == OriginalRareType.SSR || character.OriginalRare == OriginalRareType.SR)
@@ -1245,7 +1260,7 @@ namespace EpinelPS.Utils
                 }
                 else
                 {
-                    user.AddTrigger(Trigger.ObtainCharacterNew, 1);
+                    user.AddTrigger(Trigger.ObtainCharacterNew, 1, 0);
                 }
 
                 if (character.OriginalRare == OriginalRareType.SSR || character.OriginalRare == OriginalRareType.SR)
