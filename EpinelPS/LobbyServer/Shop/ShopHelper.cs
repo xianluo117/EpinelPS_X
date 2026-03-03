@@ -420,6 +420,12 @@ public class ShopHelper
         // Check if character already exists in user.Characters
         var userCharacter = user.GetCharacter(characterTid);
         bool isAddNewCharacter = userCharacter == null;
+
+        // Calculate character material num
+        int characterMaterialNum = isAddNewCharacter ? goodsValue * quantity - 1 : goodsValue * quantity;
+
+        NetCharacterData characterData = new NetCharacterData();
+
         if (isAddNewCharacter)
         {
             Logging.WriteLine($"未发现拥有角色 {characterTid} {characterRecord.NameCode},开始新建角色！", LogType.Debug);
@@ -435,11 +441,15 @@ public class ShopHelper
                 Tid = characterRecord.Id,
                 UltiSkillLv = 1
             });
-            response.Product.Character.Add(new NetCharacterData
+
+
+            characterData = new NetCharacterData
             {
                 Csn = user.GenerateUniqueCharacterId(),
-                Tid = characterRecord.Id,
-            });
+                Tid = characterRecord.Id
+            };
+
+            
             user.Characters.Add(new CharacterModel
             {
                 CostumeId = 0,
@@ -469,11 +479,14 @@ public class ShopHelper
                 user.BondInfo.Add(new() { NameCode = characterRecord.NameCode, Lv = 1 });
             }
 
+
+            
+
             userCharacter = user.GetCharacter(characterTid);
         }
-        
-        // Calculate character material num
-        int characterMaterialNum = isAddNewCharacter ? goodsValue * quantity - 1 : goodsValue * quantity;
+
+        characterData.Tid = userCharacter.Tid;
+        characterData.Csn = userCharacter.Csn;
 
         if (characterMaterialNum > 0)
         {
@@ -519,9 +532,11 @@ public class ShopHelper
                 user.AddCurrency(CurrencyType.DissolutionPoint, addCurrencyNum);
             }
 
-
-            response.Product.Character.Add(GetNetCharacter(userCharacter, addMaterialNum, addCurrencyNum));
+            characterData.PieceCount = addMaterialNum;
+            characterData.CurrencyValue = addCurrencyNum;
         }
+
+        response.Product.Character.Add(characterData);
 
     }
 

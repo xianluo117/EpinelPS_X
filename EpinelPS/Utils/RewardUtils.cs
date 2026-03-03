@@ -1,7 +1,9 @@
 using EpinelPS.Data;
 using EpinelPS.Database;
+using Google.Protobuf.WellKnownTypes;
 using Org.BouncyCastle.Ocsp;
 using System.IO.Pipelines;
+using System.Xml;
 using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace EpinelPS.Utils
@@ -488,6 +490,33 @@ namespace EpinelPS.Utils
                 {
                     ret.UserTitleList.Add(record.Id);
                     user.TitleList.Add(record.Id);
+                }
+            }
+            else if (rewardType == RewardType.Frame)
+            {
+                Logging.WriteLine($"添加边框{rewardId}",LogType.Info);
+                UserFrameRecord? record = GameData.Instance.userFrameTable.Values.FirstOrDefault(x => x.Id == rewardId);
+                if (record != null)
+                {
+                    NetProfileFrameData frameData = new NetProfileFrameData
+                    {
+                        FrameTid = record.Id,
+                        AcquiredAt = Timestamp.FromDateTimeOffset(DateTimeOffset.UtcNow)
+                    };
+
+                    ret.ProfileFrame.Add(frameData);
+                    user.AddUnique(user.FrameList,record.Id);
+                    
+                }
+            }
+            else if (rewardType == RewardType.CharacterCostume)
+            {
+                Logging.WriteLine($"添加服装{rewardId}", LogType.Info);
+                var record = GameData.Instance.CharacterCostumeTable.Values.FirstOrDefault(x => x.Id == rewardId);
+                if (record != null)
+                {
+                    ret.CharacterCostume.Add(record.Id);
+                    user.AddUnique(user.CostumeList, record.Id);
                 }
             }
             else

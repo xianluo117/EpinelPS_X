@@ -351,7 +351,7 @@ namespace EpinelPS.LobbyServer.Event.Shop
             return true;
         }
 
-        public static void AddCharacterByCharacterTid(User user, ref ResEventShopMultipleBuyProduct response, int characterTid, int goodsValue, int quantity, int order)
+        public static void AddCharacterByCharacterTid0(User user, ref ResEventShopMultipleBuyProduct response, int characterTid, int goodsValue, int quantity, int order)
         {
             // Get character data from GameData.Instance.CharacterTable
             if (!GameData.Instance.CharacterTable.TryGetValue(characterTid, out var characterRecord))
@@ -416,6 +416,139 @@ namespace EpinelPS.LobbyServer.Event.Shop
             }
 
         }
+
+
+        public static void AddCharacterByCharacterTid(User user, ref ResEventShopMultipleBuyProduct response, int characterTid, int goodsValue, int quantity, int order)
+        {
+            // Get character data from GameData.Instance.CharacterTable
+            if (!GameData.Instance.CharacterTable.TryGetValue(characterTid, out var characterRecord))
+            {
+                return; // Character data not found, return
+            }
+            // Check if character already exists in user.Characters
+            var userCharacter = user.GetCharacter(characterTid);
+            bool isAddNewCharacter = userCharacter == null;
+
+            // Calculate character material num
+            int characterMaterialNum = isAddNewCharacter ? goodsValue * quantity - 1 : goodsValue * quantity;
+
+            NetCharacterData characterData = new NetCharacterData();
+
+            if (isAddNewCharacter)
+            {
+                Logging.WriteLine($"未发现拥有角色 {characterTid} {characterRecord.NameCode},开始新建角色！", LogType.Debug);
+                int csn = user.GenerateUniqueCharacterId();
+                response.Product.UserCharacters.Add(new NetUserCharacterDefaultData
+                {
+                    CostumeId = 0,
+                    Csn = csn,
+                    Grade = 0,
+                    Lv = 1,
+                    Skill1Lv = 1,
+                    Skill2Lv = 1,
+                    Tid = characterRecord.Id,
+                    UltiSkillLv = 1
+                });
+
+
+                characterData = new NetCharacterData
+                {
+                    Csn = user.GenerateUniqueCharacterId(),
+                    Tid = characterRecord.Id
+                };
+
+
+                user.Characters.Add(new CharacterModel
+                {
+                    CostumeId = 0,
+                    Csn = csn,
+                    Grade = 0,
+                    Level = 1,
+                    Skill1Lvl = 1,
+                    Skill2Lvl = 1,
+                    Tid = characterRecord.Id,
+                    UltimateLevel = 1
+                });
+
+                // Add "New Character" Badge
+                user.AddBadge(BadgeContents.NikkeNew, characterRecord.NameCode.ToString());
+                user.AddTrigger(Trigger.ObtainCharacter, 1, characterRecord.NameCode);
+                if (characterRecord.OriginalRare == OriginalRareType.SR)
+                {
+                    user.AddTrigger(Trigger.ObtainCharacterSSR, 1);
+                }
+                else
+                {
+                    user.AddTrigger(Trigger.ObtainCharacterNew, 1, 0);
+                }
+
+                if (characterRecord.OriginalRare == OriginalRareType.SSR || characterRecord.OriginalRare == OriginalRareType.SR)
+                {
+                    user.BondInfo.Add(new() { NameCode = characterRecord.NameCode, Lv = 1 });
+                }
+
+
+
+
+                userCharacter = user.GetCharacter(characterTid);
+            }
+
+            characterData.Tid = userCharacter.Tid;
+            characterData.Csn = userCharacter.Csn;
+
+            if (characterMaterialNum > 0)
+            {
+
+                // Get max core num
+                //int maxCoreNum = currentOriginalRare == OriginalRareType.SSR ? 11 : currentOriginalRare == OriginalRareType.SR ? 3 : 1;
+                int maxCoreNum = GetValueByRarity(characterRecord.OriginalRare, 0, 2, 10);//最大可拥有碎片数量
+                                                                                          // Get current core num
+                int currentCoreNum = userCharacter.Grade;
+                Logging.WriteLine($"当前角色 {characterTid} 核心等级 {currentCoreNum}！", LogType.Info);
+
+                // If current core num is greater than max core num, set current core num to max core num
+                if (currentCoreNum > maxCoreNum) currentCoreNum = maxCoreNum;
+                int currentMaterialNum = user.Items.FirstOrDefault(x => x.ItemType == characterRecord.PieceId)?.Count ?? 0;
+                Logging.WriteLine($"当前角色 {characterTid} 拥有的核心碎片 {currentMaterialNum} 个！", LogType.Info);
+
+                int addMaterialNum = characterMaterialNum; //需要添加的碎片数量
+
+                int addCurrencyNum = 0;
+
+                bool isAddCurrency = currentCoreNum + currentMaterialNum + addMaterialNum > maxCoreNum; //是否需要添加主体标签
+
+                if (isAddCurrency)//若需要添加主体标签，则购买的碎片数量超过最大可拥有核心数
+                {
+                    Logging.WriteLine($"当前角色 {characterTid} 拥有的核心碎片 {currentMaterialNum} 个！ 需要添加标签 ", LogType.Info);
+                    int MaterialCurrencyNum = GetValueByRarity(characterRecord.OriginalRare, 150, 200, 6000); //当前每个碎片的主体标签数量
+
+                    addCurrencyNum = (currentCoreNum + currentMaterialNum + addMaterialNum - maxCoreNum) * MaterialCurrencyNum;//计算需要添加的主体标签数
+
+                    addMaterialNum = maxCoreNum - currentCoreNum - currentMaterialNum;//碎片可添加数量
+                }
+
+                if (addMaterialNum > 0)
+                {
+                    Logging.WriteLine($"需要添加碎片数量  {addMaterialNum}", LogType.Info);
+                    AddItemById(user, ref response, itemId: characterRecord.PieceId, RewardType.Item, addMaterialNum, 1, order);
+                }
+
+                if (addCurrencyNum > 0)
+                {
+                    Logging.WriteLine($"需要添加标签数量  {addCurrencyNum}", LogType.Info);
+                    response.Product.Currency.Add(new NetCurrencyData() { Type = (int)CurrencyType.DissolutionPoint, Value = addCurrencyNum });
+                    user.AddCurrency(CurrencyType.DissolutionPoint, addCurrencyNum);
+                }
+
+                characterData.PieceCount = addMaterialNum;
+                characterData.CurrencyValue = addCurrencyNum;
+            }
+
+            response.Product.Character.Add(characterData);
+
+        }
+
+
 
         public static void AddItemById(User user, ref ResEventShopMultipleBuyProduct response,
             int itemId, RewardType itemType, int goodsValue, int quantity, int order)
@@ -509,5 +642,13 @@ namespace EpinelPS.LobbyServer.Event.Shop
                 Tid = character.Tid,
             };
         }
+
+        public static int GetValueByRarity(OriginalRareType rarity, int rValue, int srValue, int ssrValue) => rarity switch
+        {
+            OriginalRareType.R => rValue,
+            OriginalRareType.SR => srValue,
+            OriginalRareType.SSR => ssrValue,
+            _ => throw new Exception($"Unknown character rarity: {rarity}")
+        };
     }
 }
