@@ -29,6 +29,11 @@ namespace EpinelPS.LobbyServer.Shop
                 Logging.WriteLine($"Error buying shop product: {ex.Message}", LogType.Error);
             }
 
+            foreach (var item in req.Products)
+            {
+                ShopHelper.UpCount(user, req.ShopCategory, item.ShopProductTid, item.Quantity);
+            }
+
             user.AddTrigger(Trigger.MainShopBuy, req.Products.Count);
             await WriteDataAsync(response);
         }

@@ -10,10 +10,7 @@ namespace EpinelPS.LobbyServer.Shop;
 
 public class ShopHelper
 {
-
-    private static readonly ILog log = LogManager.GetLogger(typeof(ShopHelper));
-
-
+    
     public static ResShopBuyProduct BuyShopProduct(User user, ReqShopBuyProduct req)
     {
         ResShopBuyProduct response = new();
@@ -67,6 +64,58 @@ public class ShopHelper
             return response;
         }
     }
+
+
+    public static void UpCount(User user, int shopCategory, int shopProductTid, int count)
+    {
+        var userBuyCounts = new List<EventShopProductData>();
+        int dateDay = user.GetDateDay();
+        if (user.ShopBuyCountInfo.TryGetValue(shopCategory, out var userBuyCountInfo))
+        {
+            userBuyCounts = userBuyCountInfo.datas;
+            EventShopProductData? productcountData =
+                userBuyCounts.FirstOrDefault(x => x.ProductTid == shopProductTid);
+            if (productcountData == null)
+            {
+                // 记录不存在：新建
+                productcountData = new EventShopProductData
+                {
+                    ProductTid = shopProductTid,
+                    BuyCount = count
+                };
+                userBuyCounts.Add(productcountData);
+                userBuyCountInfo.LastDay = dateDay;
+            }
+            else if (userBuyCountInfo.LastDay == dateDay)
+            {
+                // 记录存在且是今天：累加
+                productcountData.BuyCount += count;
+            }
+            else
+            {
+                // 记录存在但不是今天：重置
+                productcountData.BuyCount = count;
+                userBuyCountInfo.LastDay = dateDay;
+            }
+        }
+        else
+        {
+            user.ShopBuyCountInfo.Add(shopCategory, new()
+            {
+                ShopCategory = shopCategory,
+                LastDay = dateDay,
+                datas = new List<EventShopProductData>
+                {
+                    new()
+                    {
+                        ProductTid = shopProductTid,
+                        BuyCount = count
+                    }
+                }
+            });
+        }
+    }
+
 
     public static void BuyShopMultipleProduct(User user, ref ResShopBuyMultipleProduct response, ReqShopBuyMultipleProduct req)
     {
