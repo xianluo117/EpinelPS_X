@@ -38,6 +38,7 @@ public class User
     public int BanId = 0;
     public DateTime LastReset = DateTime.MinValue;
     public DateTime LastWeeklyReset = DateTime.MinValue;
+   
 
     // Game data
     public List<string> CompletedScenarios = [];
@@ -150,6 +151,7 @@ public class User
 
     //shop
     public Dictionary<int, ShopBuyCountData> ShopBuyCountInfo = []; // key: eventId
+    public CurrentShopDate CurrentShopDate = new ();
 
     public TriggerModel AddTrigger(Trigger type, int value, int conditionId = 0)
     {
@@ -605,3 +607,4 @@ public class User
         return dateTime.Year * 10000 + dateTime.Month * 100 + dateTime.Day;
     }
 }
+

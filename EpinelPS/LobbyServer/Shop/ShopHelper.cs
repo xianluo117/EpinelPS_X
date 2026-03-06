@@ -3,14 +3,20 @@ using EpinelPS.Database;
 using EpinelPS.LobbyServer.Event.Shop;
 using EpinelPS.Utils;
 using log4net;
+using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Ocsp;
+using System.Collections.Concurrent;
+using System.Data.Common;
+using EpinelPS.LobbyServer.LobbyUser;
+using static EpinelPS.Database.SqliteQueryHelper;
 
 namespace EpinelPS.LobbyServer.Shop;
 
 public class ShopHelper
 {
-    
+    public static ConcurrentDictionary<int, ShopDate> _shopDateCache;
+
     public static ResShopBuyProduct BuyShopProduct(User user, ReqShopBuyProduct req)
     {
         ResShopBuyProduct response = new();
@@ -66,6 +72,602 @@ public class ShopHelper
     }
 
 
+    public static List<ContentsShopProductRecord> SelectRandomItems(List<ContentsShopProductRecord> shoplist)
+    {
+       
+
+        if (!shoplist.Any())
+            return new List<ContentsShopProductRecord>();
+
+        // 1. 按 ProductOrder 类型分组
+        var groupedByOrder = shoplist
+            .GroupBy(x => x.ProductOrder)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var selectedItems = new List<ContentsShopProductRecord>();
+
+        // 2. 对每个 ProductOrder 类型进行抽取
+        foreach (var orderGroup in groupedByOrder)
+        {
+            var itemsInGroup = orderGroup.Value;
+
+            // 计算该组的总概率
+            double totalProb = itemsInGroup.Sum(x => x.ProductProb);
+
+            if (totalProb <= 0)
+                continue;
+
+            // 3. 根据概率选择物品
+            ContentsShopProductRecord selectedItem = SelectItemByProbability(itemsInGroup, totalProb);
+
+            if (selectedItem != null)
+            {
+                selectedItems.Add(selectedItem);
+            }
+        }
+
+        return selectedItems;
+    }
+
+
+    // 根据概率选择物品
+    public static ContentsShopProductRecord SelectItemByProbability(List<ContentsShopProductRecord> items, double totalProb)
+    {
+        if (!items.Any() || totalProb <= 0)
+            return null;
+
+        // 生成随机数
+        Random random = new Random();
+        double randomValue = random.NextDouble() * totalProb;
+
+        double cumulativeProb = 0;
+
+        foreach (var item in items)
+        {
+            cumulativeProb += item.ProductProb;
+
+            if (randomValue <= cumulativeProb)
+            {
+                return item;
+            }
+        }
+
+        // 如果由于浮点数精度问题没选中，返回最后一个
+        return items.Last();
+    }
+
+    // 计算折扣价格
+    public static int CalculateDiscounted(int discountProbId)
+    {
+
+        // DiscountProbId 小于等于 100，直接折扣
+        if (discountProbId <= 100)
+        {
+            return discountProbId;
+        }
+
+        // DiscountProbId 为 1000，从 10%、20%、40% 中随机
+        if (discountProbId == 1000)
+        {
+            int[] discounts = { 10, 20, 40 };
+            Random random = new Random();
+            int index = random.Next(discounts.Length);
+            return discounts[index];
+        }
+
+        // DiscountProbId 为 1001，从 10%、20%、30% 中随机
+        if (discountProbId == 1001)
+        {
+            int[] discounts = { 10, 20, 30 };
+            Random random = new Random();
+            int index = random.Next(discounts.Length);
+            return discounts[index];
+        }
+
+        // 其他情况，没有折扣
+        return 0;
+    }
+
+    public static void LoadShopDate()
+    {
+        _shopDateCache = new ConcurrentDictionary<int, ShopDate>();
+        using var command = _connection.CreateCommand();
+        command.CommandText = "SELECT * FROM ShopDate";
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var info = new ShopDate
+            {
+                ShopCategory = reader.GetInt32(0),
+                LastDay = reader.GetInt32(1)
+            };
+
+            _shopDateCache[info.ShopCategory] = info;
+        }
+    }
+
+    public static void SaveShopDate(ShopDate info)
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = @"
+        INSERT OR REPLACE INTO ShopDate (ShopCategory, LastDay) 
+        VALUES (@shopCategory, @lastday)
+    ";
+
+        command.Parameters.AddWithValue("@shopCategory", info.ShopCategory);
+        command.Parameters.AddWithValue("@lastday", info.LastDay);
+        command.ExecuteNonQuery();
+    }
+
+    public static Dictionary<int, List<CurrentShopInfo>> GetCurrentShopInfo()
+    {
+        var result = new Dictionary<int, List<CurrentShopInfo>>();
+
+        using var command = _connection.CreateCommand();
+        command.CommandText = "SELECT * FROM CurrentShopInfo ORDER BY ShopCategory";
+
+        using var reader = command.ExecuteReader();
+        // 验证是否有数据
+        if (!reader.HasRows)
+        {
+            return result; // 返回空字典
+        }
+
+        while (reader.Read())
+        {
+            var shopInfo = new CurrentShopInfo
+            {
+                ShopCategory = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                ShopTid = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                RenewCount = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                RenewAt = reader.IsDBNull(4) ? 0 : reader.GetInt64(4),
+                NextRenewAt = reader.IsDBNull(5) ? 0 : reader.GetInt64(5),
+                FreeRenewCount = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                ProductId = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                ProductOrder = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
+                BuyLimitCount = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                BuyCount = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                CorporationType = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                Discount = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
+                EndAt = reader.IsDBNull(13) ? 0 : reader.GetInt64(13),
+                UseDateCondition = reader.IsDBNull(14) ? false : reader.GetBoolean(14)
+            };
+
+            // 按ShopCategory分组
+            if (!result.ContainsKey(shopInfo.ShopCategory))
+            {
+                result[shopInfo.ShopCategory] = new List<CurrentShopInfo>();
+            }
+
+            result[shopInfo.ShopCategory].Add(shopInfo);
+        }
+
+        return result;
+    }
+
+    public static CurrentShopInfo GetCurrentShopInfo(int shopCategory,int productId)
+    {
+        var result = new CurrentShopInfo();
+
+        using var command = _connection.CreateCommand();
+        command.CommandText = "SELECT * FROM CurrentShopInfo WHERE ShopCategory = @shopCategory AND ProductId = @productId";
+        command.Parameters.AddWithValue("@shopCategory", shopCategory);
+        command.Parameters.AddWithValue("@productId", productId);
+        using var reader = command.ExecuteReader();
+        // 验证是否有数据
+        if (!reader.HasRows)
+        {
+            return result; // 返回空字典
+        }
+
+        while (reader.Read())
+        {
+            var shopInfo = new CurrentShopInfo
+            {
+                ShopCategory = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                ShopTid = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                RenewCount = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                RenewAt = reader.IsDBNull(4) ? 0 : reader.GetInt64(4),
+                NextRenewAt = reader.IsDBNull(5) ? 0 : reader.GetInt64(5),
+                FreeRenewCount = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                ProductId = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                ProductOrder = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
+                BuyLimitCount = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                BuyCount = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                CorporationType = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                Discount = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
+                EndAt = reader.IsDBNull(13) ? 0 : reader.GetInt64(13),
+                UseDateCondition = reader.IsDBNull(14) ? false : reader.GetBoolean(14)
+            };
+
+            result = shopInfo;
+        }
+
+        return result;
+    }
+
+
+    public static void SaveShopInfo(CurrentShopInfo shopInfo)
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = @"
+            INSERT INTO CurrentShopInfo (
+                ShopCategory, ShopTid, RenewCount, RenewAt, 
+                NextRenewAt, FreeRenewCount, ProductId, ProductOrder, 
+                BuyLimitCount, BuyCount, CorporationType, Discount, 
+                EndAt, UseDateCondition
+            ) VALUES (
+                @ShopCategory, @ShopTid, @RenewCount, @RenewAt,
+                @NextRenewAt, @FreeRenewCount, @ProductId, @ProductOrder,
+                @BuyLimitCount, @BuyCount, @CorporationType, @Discount,
+                @EndAt, @UseDateCondition
+            )";
+
+        
+        command.Parameters.AddWithValue("@ShopCategory", shopInfo.ShopCategory);
+        command.Parameters.AddWithValue("@ShopTid", shopInfo.ShopTid);
+        command.Parameters.AddWithValue("@RenewCount", shopInfo.RenewCount);
+        command.Parameters.AddWithValue("@RenewAt", shopInfo.RenewAt);
+        command.Parameters.AddWithValue("@NextRenewAt", shopInfo.NextRenewAt);
+        command.Parameters.AddWithValue("@FreeRenewCount", shopInfo.FreeRenewCount);
+        command.Parameters.AddWithValue("@ProductId", shopInfo.ProductId);
+        command.Parameters.AddWithValue("@ProductOrder", shopInfo.ProductOrder);
+        command.Parameters.AddWithValue("@BuyLimitCount", shopInfo.BuyLimitCount);
+        command.Parameters.AddWithValue("@BuyCount", shopInfo.BuyCount);
+        command.Parameters.AddWithValue("@CorporationType", shopInfo.CorporationType);
+        command.Parameters.AddWithValue("@Discount", shopInfo.Discount);
+        command.Parameters.AddWithValue("@EndAt", shopInfo.EndAt);
+        command.Parameters.AddWithValue("@UseDateCondition", shopInfo.UseDateCondition);
+        command.ExecuteNonQuery();
+    }
+
+    public static void ClearCurrentShopInfo()
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = "DELETE FROM CurrentShopInfo";
+        command.ExecuteNonQuery();
+    }
+
+    public static int DeleteCurrentShopInfoByCategory(int shopCategory)
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = "DELETE FROM CurrentShopInfo WHERE ShopCategory = @shopCategory";
+        command.Parameters.AddWithValue("@shopCategory", shopCategory);
+
+        int rowsAffected = command.ExecuteNonQuery();
+
+        return rowsAffected; // 返回删除的行数
+    }
+
+    public static NetShopProductData RenewShopByCategory(int dateDay, User user, ContentsShopRecord shop,
+        int shopCategory)
+    {
+        NetShopProductData tShopProductData = new NetShopProductData();
+
+        LoadShopDate();
+        SaveShopDate(new() { LastDay = dateDay, ShopCategory = shopCategory });
+        DeleteCurrentShopInfoByCategory(shopCategory);
+
+        tShopProductData.ShopTid = shop.Id;
+        tShopProductData.ShopCategory = (int)shop.ShopCategory;
+        tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
+        tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
+        tShopProductData.FreeRenewCount = 5;
+        tShopProductData.RenewCount = 5;
+        GetInfoData(user, shop.Id, ref tShopProductData, shop.BundleId);
+
+        var productlist = tShopProductData.List.ToList();
+
+        foreach (var product in productlist)
+        {
+            CurrentShopInfo cinfo = new CurrentShopInfo();
+            cinfo.ShopTid = tShopProductData.ShopTid;
+            cinfo.ShopCategory = tShopProductData.ShopCategory;
+            cinfo.RenewAt = tShopProductData.RenewAt;
+            cinfo.NextRenewAt = tShopProductData.NextRenewAt;
+            cinfo.FreeRenewCount = tShopProductData.FreeRenewCount;
+            cinfo.RenewCount = tShopProductData.RenewCount;
+            cinfo.ProductId = product.ProductId;
+            cinfo.ProductOrder = product.Order;
+            cinfo.BuyCount = product.BuyCount;
+            cinfo.BuyLimitCount = product.BuyLimitCount;
+            cinfo.CorporationType = product.CorporationType;
+            cinfo.Discount = product.Discount;
+            cinfo.EndAt = product.EndAt;
+            cinfo.UseDateCondition = product.UseDateCondition;
+            SaveShopInfo(cinfo);
+        }
+        return tShopProductData;
+    }
+
+
+    public static NetShopProductData LoadCurShopByCategory(int dateDay, User user, ContentsShopRecord shop,int shopCategory)
+    {
+        NetShopProductData tShopProductData = new NetShopProductData();
+
+        LoadShopDate();
+
+        if (_shopDateCache.TryGetValue(shopCategory, out ShopDate? info))
+        {
+            if (info.LastDay != dateDay)
+            {
+                info.LastDay = dateDay;
+                SaveShopDate(info);
+                DeleteCurrentShopInfoByCategory(shopCategory);
+
+                tShopProductData.ShopTid = shop.Id;
+                tShopProductData.ShopCategory = (int)shop.ShopCategory;
+                tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
+                tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
+                tShopProductData.FreeRenewCount = 5;
+                tShopProductData.RenewCount = 5;
+                GetInfoData(user, shop.Id, ref tShopProductData, shop.BundleId);
+
+                var productlist = tShopProductData.List.ToList();
+
+                foreach (var product in productlist)
+                {
+                    CurrentShopInfo cinfo = new CurrentShopInfo();
+                    cinfo.ShopTid = tShopProductData.ShopTid;
+                    cinfo.ShopCategory = tShopProductData.ShopCategory;
+                    cinfo.RenewAt = tShopProductData.RenewAt;
+                    cinfo.NextRenewAt = tShopProductData.NextRenewAt;
+                    cinfo.FreeRenewCount = tShopProductData.FreeRenewCount;
+                    cinfo.RenewCount = tShopProductData.RenewCount;
+                    cinfo.ProductId = product.ProductId;
+                    cinfo.ProductOrder = product.Order;
+                    cinfo.BuyCount = product.BuyCount;
+                    cinfo.BuyLimitCount = product.BuyLimitCount;
+                    cinfo.CorporationType = product.CorporationType;
+                    cinfo.Discount = product.Discount;
+                    cinfo.EndAt = product.EndAt;
+                    cinfo.UseDateCondition = product.UseDateCondition;
+                    SaveShopInfo(cinfo);
+                }
+
+
+                return tShopProductData;
+            }
+            else
+            {
+
+
+                var allinfo = GetCurrentShopInfo();
+                if (allinfo.Count > 0)
+                {
+                    if (allinfo.ContainsKey(shopCategory))
+                    {
+                        Console.WriteLine($"分类 {shopCategory} 有 {allinfo[shopCategory].Count} 条数据");
+                        List<NetShopProductInfoData> tempList = new List<NetShopProductInfoData>();
+                        foreach (var item in allinfo[shopCategory])
+                        {
+                            tShopProductData.ShopTid = item.ShopTid;
+                            tShopProductData.ShopCategory = item.ShopCategory;
+                            tShopProductData.RenewAt = item.RenewAt;
+                            tShopProductData.NextRenewAt = item.NextRenewAt;
+                            tShopProductData.FreeRenewCount = item.FreeRenewCount;
+                            tShopProductData.RenewCount = item.RenewCount;
+
+                            tempList.Add(new NetShopProductInfoData()
+                            {
+                                Order = item.ProductOrder,
+                                ProductId = item.ProductId,
+                                BuyLimitCount = item.BuyLimitCount,
+                                BuyCount = item.BuyCount,
+                                Discount = item.Discount,
+                                CorporationType = item.CorporationType,
+                                EndAt = item.EndAt,
+                                UseDateCondition = item.UseDateCondition
+                            });
+                        }
+                        tShopProductData.List.AddRange(tempList);
+                        
+                    }
+                }
+                return tShopProductData;
+
+            }
+
+        }
+        else
+        {
+            SaveShopDate(new() { LastDay = dateDay, ShopCategory = shopCategory });
+
+            tShopProductData.ShopTid = shop.Id;
+            tShopProductData.ShopCategory = (int)shop.ShopCategory;
+            tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
+            tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
+            tShopProductData.FreeRenewCount = 5;
+            tShopProductData.RenewCount = 5;
+            GetInfoData(user, shop.Id, ref tShopProductData, shop.BundleId);
+
+            var productlist = tShopProductData.List.ToList();
+            foreach (var product in productlist)
+            {
+                CurrentShopInfo cinfo = new CurrentShopInfo();
+
+                cinfo.ShopTid = tShopProductData.ShopTid;
+                cinfo.ShopCategory = tShopProductData.ShopCategory;
+                cinfo.RenewAt = tShopProductData.RenewAt;
+                cinfo.NextRenewAt = tShopProductData.NextRenewAt;
+                cinfo.FreeRenewCount = tShopProductData.FreeRenewCount;
+                cinfo.RenewCount = tShopProductData.RenewCount;
+                cinfo.ProductId = product.ProductId;
+                cinfo.ProductOrder = product.Order;
+                cinfo.BuyCount = product.BuyCount;
+                cinfo.BuyLimitCount = product.BuyLimitCount;
+                cinfo.CorporationType = product.CorporationType;
+                cinfo.Discount = product.Discount;
+                cinfo.EndAt = product.EndAt;
+                cinfo.UseDateCondition = product.UseDateCondition;
+                SaveShopInfo(cinfo);
+            }
+
+
+            return tShopProductData;
+        }
+
+    }
+
+    public static List<NetShopProductData> LoadCurShop(int dateDay, User user, List<ContentsShopRecord> shoplist)
+    {
+        List<NetShopProductData> netShopDatas = new();
+        LoadShopDate();
+        if (_shopDateCache.TryGetValue(0, out ShopDate? info))
+        {
+            if (info.LastDay != dateDay)
+            {
+                info.LastDay = dateDay;
+                SaveShopDate(info);
+                ClearCurrentShopInfo();
+                foreach (var shop in shoplist)
+                {
+                    NetShopProductData tShopProductData = new NetShopProductData();
+                    tShopProductData.ShopTid = shop.Id;
+                    tShopProductData.ShopCategory = (int)shop.ShopCategory;
+                    tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
+                    tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
+                    tShopProductData.FreeRenewCount = 5;
+                    tShopProductData.RenewCount = 5;
+                    GetInfoData(user, shop.Id, ref tShopProductData, shop.BundleId);
+                    SaveShopDate(new() { LastDay = dateDay, ShopCategory = tShopProductData.ShopCategory });
+                    var productlist = tShopProductData.List.ToList();
+                    foreach (var product in productlist)
+                    {
+                        CurrentShopInfo cinfo = new CurrentShopInfo();
+                        cinfo.ShopTid = tShopProductData.ShopTid;
+                        cinfo.ShopCategory = tShopProductData.ShopCategory;
+                        cinfo.RenewAt = tShopProductData.RenewAt;
+                        cinfo.NextRenewAt = tShopProductData.NextRenewAt;
+                        cinfo.FreeRenewCount = tShopProductData.FreeRenewCount;
+                        cinfo.RenewCount = tShopProductData.RenewCount;
+                        cinfo.ProductId = product.ProductId;
+                        cinfo.ProductOrder = product.Order;
+                        cinfo.BuyCount = product.BuyCount;
+                        cinfo.BuyLimitCount = product.BuyLimitCount;
+                        cinfo.CorporationType = product.CorporationType;
+                        cinfo.Discount = product.Discount;
+                        cinfo.EndAt = product.EndAt;
+                        cinfo.UseDateCondition = product.UseDateCondition;
+                        SaveShopInfo(cinfo);
+                    }
+
+                    netShopDatas.Add(tShopProductData);
+                }
+
+                return netShopDatas;
+            }
+            else
+            {
+                var allinfo = GetCurrentShopInfo();
+                if (allinfo.Count > 0)
+                {
+                    foreach (var category in allinfo.Keys)
+                    {
+                        Console.WriteLine($"分类 {category} 有 {allinfo[category].Count} 条数据");
+                        NetShopProductData tShopProductData = new NetShopProductData();
+                        List<NetShopProductInfoData> tempList = new List<NetShopProductInfoData>();
+                        foreach (var item in allinfo[category])
+                        {
+                            tShopProductData.ShopTid = item.ShopTid;
+                            tShopProductData.ShopCategory = item.ShopCategory;
+                            tShopProductData.RenewAt = item.RenewAt;
+                            tShopProductData.NextRenewAt = item.NextRenewAt;
+                            tShopProductData.FreeRenewCount = item.FreeRenewCount;
+                            tShopProductData.RenewCount = item.RenewCount;
+                            tempList.Add(new NetShopProductInfoData()
+                            {
+                                Order = item.ProductOrder,
+                                ProductId = item.ProductId,
+                                BuyLimitCount = item.BuyLimitCount,
+                                BuyCount = item.BuyCount,
+                                Discount = item.Discount,
+                                CorporationType = item.CorporationType,
+                                EndAt = item.EndAt,
+                                UseDateCondition = item.UseDateCondition
+                            });
+                        }
+
+                        tShopProductData.List.AddRange(tempList);
+                        netShopDatas.Add(tShopProductData);
+                    }
+                }
+
+                return netShopDatas;
+            }
+        }
+        else
+        {
+            ClearCurrentShopInfo();
+            foreach (var shop in shoplist)
+            {
+                NetShopProductData tShopProductData = new NetShopProductData();
+                tShopProductData.ShopTid = shop.Id;
+                tShopProductData.ShopCategory = (int)shop.ShopCategory;
+                tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
+                tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
+                tShopProductData.FreeRenewCount = 5;
+                tShopProductData.RenewCount = 5;
+                GetInfoData(user, shop.Id, ref tShopProductData, shop.BundleId);
+                SaveShopDate(new() { LastDay = dateDay, ShopCategory = tShopProductData.ShopCategory });
+                var productlist = tShopProductData.List.ToList();
+                foreach (var product in productlist)
+                {
+                    CurrentShopInfo cinfo = new CurrentShopInfo();
+                    cinfo.ShopTid = tShopProductData.ShopTid;
+                    cinfo.ShopCategory = tShopProductData.ShopCategory;
+                    cinfo.RenewAt = tShopProductData.RenewAt;
+                    cinfo.NextRenewAt = tShopProductData.NextRenewAt;
+                    cinfo.FreeRenewCount = tShopProductData.FreeRenewCount;
+                    cinfo.RenewCount = tShopProductData.RenewCount;
+                    cinfo.ProductId = product.ProductId;
+                    cinfo.ProductOrder = product.Order;
+                    cinfo.BuyCount = product.BuyCount;
+                    cinfo.BuyLimitCount = product.BuyLimitCount;
+                    cinfo.CorporationType = product.CorporationType;
+                    cinfo.Discount = product.Discount;
+                    cinfo.EndAt = product.EndAt;
+                    cinfo.UseDateCondition = product.UseDateCondition;
+                    SaveShopInfo(cinfo);
+                }
+
+                netShopDatas.Add(tShopProductData);
+                user.CurrentShopDate.ShopProduct.TryAdd(tShopProductData.ShopCategory, tShopProductData);
+            }
+
+            return netShopDatas;
+        }
+    }
+
+    public static void UpCountSql(int shopCategory, int shopProductTid, int count)
+    {
+
+        LoadShopDate();
+        int dateDay = GetDay();
+        if (_shopDateCache.TryGetValue(shopCategory, out ShopDate? info))
+        {
+            var proinfo = GetCurrentShopInfo(shopCategory, shopProductTid);
+            if (proinfo.BuyCount <= 0)
+            {
+                proinfo.BuyCount = count;
+                SaveShopInfo(proinfo);
+            }
+            else if (info.LastDay == dateDay)
+            {
+                // 记录存在且是今天：累加
+                proinfo.BuyCount += count;
+                SaveShopInfo(proinfo);
+            }
+            else
+            {
+
+                proinfo.BuyCount = count;
+                SaveShopInfo(proinfo);
+            }
+        }
+    }
+
     public static void UpCount(User user, int shopCategory, int shopProductTid, int count)
     {
         var userBuyCounts = new List<EventShopProductData>();
@@ -116,6 +718,64 @@ public class ShopHelper
         }
     }
 
+
+    public static void GetInfoData(User user, int ShopCategory, ref NetShopProductData nspddata, int bundleId)
+    {
+        // 创建临时列表
+        List<NetShopProductInfoData> tempList = new List<NetShopProductInfoData>();
+        int dateDay = user.GetDateDay();
+
+        var products = GameData.Instance.ContentsShopProductTable.Values.Where(csp => csp.BundleId == bundleId).ToList();
+        var userBuyCounts = new List<EventShopProductData>();
+        List<ContentsShopProductRecord> fanilproducts = SelectRandomItems(products);
+
+
+
+
+        if (user.ShopBuyCountInfo.TryGetValue(ShopCategory, out var userBuyCountInfo))
+        {
+            userBuyCounts = userBuyCountInfo.datas;
+            foreach (var csp in fanilproducts)
+            {
+                int buyCount = 0;
+                if (userBuyCountInfo.LastDay == dateDay)
+                {
+                    buyCount = userBuyCounts.FirstOrDefault(x => x.ProductTid == csp.Id)?.BuyCount ?? 0;
+                }
+
+
+                tempList.Add(new NetShopProductInfoData()
+                {
+                    Order = csp.ProductOrder,
+                    ProductId = csp.Id,
+                    BuyLimitCount = csp.BuyLimitCount,
+                    BuyCount = buyCount,
+                    Discount = CalculateDiscounted(csp.DiscountProbId)
+                });
+            }
+        }
+        else
+        {
+            foreach (var csp in fanilproducts)
+            {
+                int buyCount = 0;
+                tempList.Add(new NetShopProductInfoData()
+                {
+                    Order = csp.ProductOrder,
+                    ProductId = csp.Id,
+                    BuyLimitCount = csp.BuyLimitCount,
+                    BuyCount = buyCount,
+                    Discount = CalculateDiscounted(csp.DiscountProbId)
+                });
+            }
+        }
+
+
+
+
+        // 将临时列表添加到原对象
+        nspddata.List.AddRange(tempList);
+    }
 
     public static void BuyShopMultipleProduct(User user, ref ResShopBuyMultipleProduct response, ReqShopBuyMultipleProduct req)
     {
@@ -184,9 +844,12 @@ public class ShopHelper
 
         response.Product = new();
 
+
         var productTids = buyProducts.Select(p => p.ShopProductTid).ToList();
         var shopProducts = GameData.Instance.ContentsShopProductTable.Values.Where(x => productTids.Contains(x.Id))
             .ToList();
+
+
 
         // Check user currency and item balance
         if (CheckUserCurrencyAndItemBalance(user, shopProducts, buyProducts,
@@ -599,6 +1262,26 @@ public class ShopHelper
         return true;
     }
 
+    public static int GetDiscountByProduct(User user, ContentsShopProductRecord sp)
+    {
+        var shop = GameData.Instance.ContentsShopTable.Values.Where(x => x.BundleId == sp.BundleId).FirstOrDefault();
+
+        int shopCategory = (int)shop.ShopCategory;
+
+        var product = user.CurrentShopDate?.ShopProduct?.GetValueOrDefault(shopCategory)?.List
+            ?.Where(dd => dd.ProductId == sp.GoodsId)
+            .FirstOrDefault();
+
+        if (product == null)
+        {
+            return 0;
+        }
+        else
+        {
+            return product.Discount;
+        }
+    }
+
     /// <summary>
     /// 检查用户资金和物品
     /// </summary>
@@ -612,15 +1295,21 @@ public class ShopHelper
         List<NetBuyProductRequestData> buyProducts,
         out Dictionary<int, int> totalCurrencyPrices, out Dictionary<int, int> totalItemPrices)
     {
+       
+
         totalCurrencyPrices = shopProducts
             .Where(sp => sp.PriceType == PriceType.Currency)
             .GroupBy(sp => sp.PriceId)
             .ToDictionary(
                 g => g.Key,
                 g => g.Sum(sp =>
-                    sp.PriceValue * ((100 - sp.DiscountProbId) / 100) *
-                    buyProducts.FirstOrDefault(bp => bp.ShopProductTid == sp.Id).Quantity)
+                {
+                    int discount = GetDiscountByProduct(user, sp); // 根据商品获取折扣
+                    return sp.PriceValue * ((100 - discount) / 100) *
+                        buyProducts.FirstOrDefault(bp => bp.ShopProductTid == sp.Id)?.Quantity ?? 0;
+                })
             );
+        
 
         totalItemPrices = shopProducts
             .Where(sp => sp.PriceType == PriceType.Item)
@@ -654,6 +1343,8 @@ public class ShopHelper
 
         return true;
     }
+
+   
 
 
     /// <summary>
@@ -754,4 +1445,11 @@ public class ShopHelper
         OriginalRareType.SSR => ssrValue,
         _ => throw new Exception($"Unknown character rarity: {rarity}")
     };
+
+    public static int GetDay()
+    {
+        // +4 每天4点重新计算 yyyyMMdd
+        DateTime dateTime = DateTime.UtcNow.AddHours(4);
+        return dateTime.Year * 10000 + dateTime.Month * 100 + dateTime.Day;
+    }
 }

@@ -2,6 +2,7 @@
 using EpinelPS.Utils;
 using System;
 using System.Security.Policy;
+using EpinelPS.Database;
 
 namespace EpinelPS.LobbyServer.Shop
 {
@@ -14,83 +15,52 @@ namespace EpinelPS.LobbyServer.Shop
             Logging.WriteLine($"Get Shop: {x.ShopCategory}", LogType.Info);
             User user = GetUser();
             
-            var shoplist = GameData.Instance.ContentsShopTable.Values.FirstOrDefault(se => (int)se.ShopCategory == x.ShopCategory);
-
-
+            ContentsShopRecord? shoplist = GameData.Instance.ContentsShopTable.Values.FirstOrDefault(se => (int)se.ShopCategory == x.ShopCategory);
             ResGetShop response = new();
-
-
             NetShopProductData tShopProductData = new NetShopProductData();
 
-            tShopProductData.ShopTid = shoplist.Id;
-            tShopProductData.ShopCategory = (int)shoplist.ShopCategory;
-            tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
-            tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
-            tShopProductData.FreeRenewCount = 5;
-            tShopProductData.RenewCount = 5;
-            GetInfoData(user, x.ShopCategory, ref tShopProductData, shoplist.BundleId);
-
-
-            response.Shop = tShopProductData;
-
-            // TODO
-
-            await WriteDataAsync(response);
-        }
-
-        private void GetInfoData(User user,int ShopCategory, ref NetShopProductData nspddata, int bundleId)
-        {
-            // 创建临时列表
-            List<NetShopProductInfoData> tempList = new List<NetShopProductInfoData>();
             int dateDay = user.GetDateDay();
+            tShopProductData = ShopHelper.LoadCurShopByCategory(dateDay, user, shoplist, x.ShopCategory);
 
-            var products = GameData.Instance.ContentsShopProductTable.Values.Where(csp => csp.BundleId == bundleId);
-
-            var userBuyCounts = new List<EventShopProductData>();
-
-            if (user.ShopBuyCountInfo.TryGetValue(ShopCategory, out var userBuyCountInfo))
+            /*if (user.CurrentShopDate.LastDay != dateDay)
             {
-                userBuyCounts = userBuyCountInfo.datas;
-                foreach (var csp in products)
+                user.CurrentShopDate.LastDay = dateDay;
+
+                tShopProductData.ShopTid = shoplist.Id;
+                tShopProductData.ShopCategory = (int)shoplist.ShopCategory;
+                tShopProductData.RenewAt = DateTime.Now.AddDays(-5).Ticks;
+                tShopProductData.NextRenewAt = DateTime.Now.AddDays(13).Ticks;
+                tShopProductData.FreeRenewCount = 5;
+                tShopProductData.RenewCount = 5;
+                ShopHelper.GetInfoData(user, x.ShopCategory, ref tShopProductData, shoplist.BundleId);
+                
+                if (user.CurrentShopDate.ShopProduct.TryGetValue(x.ShopCategory, out NetShopProductData oldProduct))
                 {
-                    int buyCount = 0;
-                    if (userBuyCountInfo.LastDay == dateDay)
-                    {
-                        buyCount = userBuyCounts.FirstOrDefault(x => x.ProductTid == csp.Id)?.BuyCount ?? 0;
-                    }
-
-
-                    tempList.Add(new NetShopProductInfoData()
-                    {
-                        Order = csp.ProductOrder,
-                        ProductId = csp.Id,
-                        BuyLimitCount = csp.BuyLimitCount,
-                        BuyCount = buyCount,
-                        Discount = csp.DiscountProbId
-                    });
+                    // 更新为新值
+                    user.CurrentShopDate.ShopProduct[x.ShopCategory] = tShopProductData;
+                }
+                else
+                {
+                    user.CurrentShopDate.ShopProduct.TryAdd(x.ShopCategory, tShopProductData);
                 }
             }
             else
             {
-                foreach (var csp in products)
+                if (user.CurrentShopDate.ShopProduct.TryGetValue(x.ShopCategory, out NetShopProductData oldProduct))
                 {
-                    int buyCount = 0;
-                    tempList.Add(new NetShopProductInfoData()
-                    {
-                        Order = csp.ProductOrder,
-                        ProductId = csp.Id,
-                        BuyLimitCount = csp.BuyLimitCount,
-                        BuyCount = buyCount,
-                        Discount = csp.DiscountProbId
-                    });
+                    tShopProductData = oldProduct;
                 }
-            }
+
+            }*/
+
+            response.Shop = tShopProductData;
 
 
-           
-
-            // 将临时列表添加到原对象
-            nspddata.List.AddRange(tempList);
+            // TODO
+            JsonDb.Save();
+            await WriteDataAsync(response);
         }
+
+        
     }
 }

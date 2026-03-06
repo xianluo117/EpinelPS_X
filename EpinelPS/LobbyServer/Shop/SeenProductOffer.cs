@@ -14,7 +14,11 @@ namespace EpinelPS.LobbyServer.Shop
 
             ResSetSetSeenProductOffer response = new();
 
-            
+            response.Result.Add(new NetUserProductOfferSeenHistory
+            {
+                ProductOfferId = req.ProductOfferId
+            });
+
 
             await WriteDataAsync(response);
         }

@@ -25,6 +25,18 @@ namespace EpinelPS.LobbyServer.LobbyUser.Profile
                 response.Data.LastCampaignHardStageId = user.LastHardStageCleared;
                 response.Data.OutpostOpenState = user.MainQuestData.ContainsKey(25);
                 response.Data.Exp = user.userPointData.ExperiencePoint;
+                response.Data.CostumeCount = user.CostumeList.Count;
+                response.Data.JukeboxCount = user.JukeboxBgm.Count;
+
+                if (user.TowerProgress.TryGetValue(4,out int fool))
+                {
+                    response.Data.LastTribeTowerFloor =fool;
+
+                }
+
+                
+               
+                
 
                 for (int i = 0; i < user.RepresentationTeamDataNew.Length; i++)
                 {

@@ -18,11 +18,9 @@ namespace EpinelPS.Database
 
         static JsonDb()
         {
-            if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "/db.json"))
+            if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "/base.db"))
             {
-                Console.WriteLine("users: warning: configuration not found, writing default data");
-                Instance = new CoreInfo();
-                Save();
+                SqliteQueryHelper.InitializeDatabase();
             }
 
             var text = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "/db.json");

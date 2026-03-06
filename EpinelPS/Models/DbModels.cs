@@ -110,6 +110,14 @@ namespace EpinelPS.Models
         public int BuyCount = 0; 
     }
 
+    public class RenewData
+    {
+        public int ShopCategory = 0;
+        public int LastDay = 0;
+        public int Count = 0;
+    }
+
+
     public class EventShopBuyCountData
     {
         public int EventId = 0; 
@@ -121,6 +129,12 @@ namespace EpinelPS.Models
         public int ShopCategory = 0;
         public int LastDay = 0; // yyyyMMdd
         public List<EventShopProductData> datas = [];
+    }
+
+    public class CurrentShopDate
+    {
+        public int LastDay = 0; // yyyyMMdd
+        public Dictionary<int,NetShopProductData> ShopProduct = [];
     }
 
     public class SynchroSlot
@@ -239,6 +253,8 @@ namespace EpinelPS.Models
         public SimRoomData SimRoomData = new();
 
         public Dictionary<int, int> DailyCounselCount = [];
+
+        public Dictionary<int, RenewData> RenewDatas { get; set; } = new Dictionary<int, RenewData>();
 
     }
     public class WeeklyResetableData
