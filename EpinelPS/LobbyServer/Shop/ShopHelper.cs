@@ -938,7 +938,7 @@ public class ShopHelper
                 for (int i = 0; i < goodsValue * quantity; i++)
                 {
                     var (tid, pos, isn) = (itemId, GetItemPos(equip.ItemSubType), user.GenerateUniqueItemId());
-                    ItemData newItem = new()
+                    DbItemData newItem = new()
                         { ItemType = tid, Count = 1, Position = pos, Isn = isn, Corp = GetEquipCorp(itemType) };
                     user.Items.Add(newItem);
                     response.Product.Item.Add(NetUtils.ItemDataToNet(newItem));
@@ -963,7 +963,7 @@ public class ShopHelper
         {
             Logging.WriteLine($"未找到物品 {itemId} ，开始新建 {goodsValue * quantity}个！", LogType.Debug);
             var (tid, count, isn) = (itemId, goodsValue * quantity, user.GenerateUniqueItemId());
-            ItemData itemData = new() { ItemType = tid, Count = count, Isn = isn ,Corp = 0};
+            DbItemData itemData = new() { ItemType = tid, Count = count, Isn = isn ,Corp = 0};
             user.Items.Add(itemData);
             response.Product.UserItems.Add(NetUtils.UserItemDataToNet(itemData));
             bool isAddAutoCharge = AddAutoChargeByTid(ref response, itemId: itemId, value: count, finalValue: count);
@@ -1058,7 +1058,7 @@ public class ShopHelper
         {
             Logging.WriteLine($"已拥有角色 {characterTid} {characterRecord.NameCode},开始添加碎片{characterRecord.PieceId}！", LogType.Debug);
 
-            ItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == characterRecord.PieceId);
+            DbItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == characterRecord.PieceId);
             if (spareItem == null)
             {
                 Logging.WriteLine($"未发现角色 id {characterRecord.PieceId} 的角色碎片", LogType.Warning);

@@ -107,7 +107,7 @@ namespace EpinelPS.LobbyServer.Outpost
             {
                 if (cost.CostType == CostType.Item)
                 {
-                    ItemData box = user.Items.Where(x => x.ItemType == cost.CostId).FirstOrDefault() ?? throw new InvalidDataException("未发现物品 " + cost.CostId);
+                    DbItemData box = user.Items.Where(x => x.ItemType == cost.CostId).FirstOrDefault() ?? throw new InvalidDataException("未发现物品 " + cost.CostId);
                     box.Count -= cost.CostValue;
                     if (box.Count == 0) user.Items.Remove(box);
 

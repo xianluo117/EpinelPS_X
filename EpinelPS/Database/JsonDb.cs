@@ -112,9 +112,9 @@ namespace EpinelPS.Database
             }
         }
 
-        public static List<ItemData> MergeItemsByType(List<ItemData> items, List<int> mergeItemTypes = null)
+        public static List<DbItemData> MergeItemsByType(List<DbItemData> items, List<int> mergeItemTypes = null)
         {
-            var mergedDict = new Dictionary<int, ItemData>();
+            var mergedDict = new Dictionary<int, DbItemData>();
 
             foreach (var item in items)
             {
@@ -140,7 +140,7 @@ namespace EpinelPS.Database
                 else
                 {
                     // 创建新项
-                    var newItem = new ItemData
+                    var newItem = new DbItemData
                     {
                         ItemType = item.ItemType,
                         Csn = item.Csn,

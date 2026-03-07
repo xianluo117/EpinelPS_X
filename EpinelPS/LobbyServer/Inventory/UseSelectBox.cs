@@ -15,7 +15,7 @@ namespace EpinelPS.LobbyServer.Inventory
 
             ResUseSelectBox response = new();
 
-            ItemData box = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ?? throw new InvalidDataException("cannot find box with isn " + req.Isn);
+            DbItemData box = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ?? throw new InvalidDataException("cannot find box with isn " + req.Isn);
 
             var boxinfo = GameData.Instance.ConsumableItems.Where(x => x.Value.Id == box.ItemType).FirstOrDefault().Value;
             Logging.WriteLine($"单次使用消耗 {boxinfo.UseFragCost} 个");

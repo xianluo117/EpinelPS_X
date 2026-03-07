@@ -158,7 +158,7 @@ namespace EpinelPS.Utils
 
 
                 // Check if user already has said item. If it is level 1, increase item count.
-                ItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Level == 0 && x.Corp == corpId);
+                DbItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Level == 0 && x.Corp == corpId);
 
                 if (existingItem != null && !rewardType.ToString().StartsWith("Equipment"))
                 {
@@ -198,7 +198,7 @@ namespace EpinelPS.Utils
                     for (int i = 0; i < rewardCount; i++)
                     {
                         int id = user.GenerateUniqueItemId();
-                        var newItem = new ItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = 1, Corp = corpId };
+                        var newItem = new DbItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = 1, Corp = corpId };
                         user.Items.Add(newItem);
 
                         ret.Item.Add(new NetItemData()
@@ -230,7 +230,7 @@ namespace EpinelPS.Utils
                     {
                         level = 1;
                     }
-                    var newItem = new ItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = rewardCount, Corp = corpId };
+                    var newItem = new DbItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = rewardCount, Corp = corpId };
                     user.Items.Add(newItem);
 
                     ret.Item.Add(new NetItemData()
@@ -328,7 +328,7 @@ namespace EpinelPS.Utils
                     };
                     ret.Item.Add(itm);
 
-                    user.Items.Add(new ItemData() { Count = rewardCount, Isn = itm.Isn, ItemType = itm.Tid });
+                    user.Items.Add(new DbItemData() { Count = rewardCount, Isn = itm.Isn, ItemType = itm.Tid });
                 }
             }
             else if (rewardType == RewardType.FavoriteItem)
@@ -368,7 +368,7 @@ namespace EpinelPS.Utils
 
                 if (user.GetCharacter(rewardId) is CharacterModel ownedCharacter)
                 {
-                    ItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
+                    DbItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
                     int maxLimitBroken = GetValueByRarity(character.OriginalRare, 0, 2, 11) - 1;
                     Logging.WriteLine($"[UseRandomBox] 角色最大碎片: {maxLimitBroken}，现有碎片数量 {spareItem.Count}");
 
@@ -586,7 +586,7 @@ namespace EpinelPS.Utils
                     for (int i = 0; i < rewardCount; i++)
                     {
                         int id = user.GenerateUniqueItemId();
-                        var newItem = new ItemData()
+                        var newItem = new DbItemData()
                             { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = 1, Corp = corpId };
                         user.Items.Add(newItem);
 
@@ -613,7 +613,7 @@ namespace EpinelPS.Utils
 
 
                     // Check if user already has said item. If it is level 1, increase item count.
-                    ItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
+                    DbItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
 
                     if (existingItem != null && !rewardType.ToString().StartsWith("Equipment"))
                     {
@@ -655,7 +655,7 @@ namespace EpinelPS.Utils
                         for (int i = 0; i < rewardCount; i++)
                         {
                             int id = user.GenerateUniqueItemId();
-                            var newItem = new ItemData()
+                            var newItem = new DbItemData()
                                 { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = 1, Corp = corpId };
                             user.Items.Add(newItem);
 
@@ -690,7 +690,7 @@ namespace EpinelPS.Utils
                             level = 1;
                         }
 
-                        var newItem = new ItemData()
+                        var newItem = new DbItemData()
                         {
                             ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = rewardCount, Corp = corpId
                         };
@@ -747,7 +747,7 @@ namespace EpinelPS.Utils
                 int corpId = 0; // Default to 0 (None)
 
                 // Check if user already has said item. If it is level 1, increase item count.
-                ItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
+                DbItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
 
                 if (existingItem != null)
                 {
@@ -778,7 +778,7 @@ namespace EpinelPS.Utils
                     int id = user.GenerateUniqueItemId();
                     int level = 1; // Default to 0
 
-                    var newItem = new ItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 1, Count = rewardCount, Corp = corpId };
+                    var newItem = new DbItemData() { ItemType = rewardId, Isn = id, Level = level, Exp = 1, Count = rewardCount, Corp = corpId };
                     user.Items.Add(newItem);
 
                     ret.Item.Add(new NetItemData()
@@ -865,7 +865,7 @@ namespace EpinelPS.Utils
                     for (int i = 0; i < rewardCount; i++)
                     {
                         int id = user.GenerateUniqueItemId();
-                        var newItem = new ItemData()
+                        var newItem = new DbItemData()
                             { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = 1, Corp = corpId };
                         user.Items.Add(newItem);
 
@@ -891,7 +891,7 @@ namespace EpinelPS.Utils
                 {
 
                     // Check if user already has said item. If it is level 1, increase item count.
-                    ItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
+                    DbItemData? existingItem = user.Items.FirstOrDefault(x => x.ItemType == rewardId && x.Corp == corpId);
 
                     if (existingItem != null && !rewardType.ToString().StartsWith("Equipment"))
                     {
@@ -932,7 +932,7 @@ namespace EpinelPS.Utils
                         for (int i = 0; i < rewardCount; i++)
                         {
                             int id = user.GenerateUniqueItemId();
-                            var newItem = new ItemData()
+                            var newItem = new DbItemData()
                                 { ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = 1, Corp = corpId };
                             user.Items.Add(newItem);
 
@@ -967,7 +967,7 @@ namespace EpinelPS.Utils
                             level = 1;
                         }
 
-                        var newItem = new ItemData()
+                        var newItem = new DbItemData()
                         {
                             ItemType = rewardId, Isn = id, Level = level, Exp = 0, Count = rewardCount, Corp = corpId
                         };
@@ -1007,7 +1007,7 @@ namespace EpinelPS.Utils
             if (user.GetCharacter(characterId) is CharacterModel ownedCharacter)
             {
                  Console.WriteLine($"[UsePiece] 角色已存在，添加碎片。");
-                ItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
+                DbItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
                 int maxLimitBroken = GetValueByRarity(character.OriginalRare, 0, 2, 11) - 1;
                 switch (spareItem)
                 {
@@ -1172,7 +1172,7 @@ namespace EpinelPS.Utils
             if (user.GetCharacter(characterId) is CharacterModel ownedCharacter)
             {
                 Console.WriteLine($"[UseSelectBox] 角色已存在，获取碎片 - Id: {character.PieceId}");
-                ItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
+                DbItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
                 if (spareItem == null)
                 {
                     Logging.WriteLine($"未发现角色 id {character.PieceId} 的角色碎片",LogType.Warning);

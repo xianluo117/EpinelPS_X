@@ -20,7 +20,7 @@ namespace EpinelPS.LobbyServer.LobbyUser.ProfileCard
 
             Console.WriteLine($"[BuyProfileCard] 获取装饰 - 类型: {CardObject.ObjectType} , 需要物品id {CardObject.RequireItemId} -数量 {CardObject.RequireItemValue}" );
 
-            ItemData box = user.Items.Where(x => x.ItemType == CardObject.RequireItemId).FirstOrDefault() ?? throw new InvalidDataException("cannot find item " + CardObject.RequireItemId);
+            DbItemData box = user.Items.Where(x => x.ItemType == CardObject.RequireItemId).FirstOrDefault() ?? throw new InvalidDataException("cannot find item " + CardObject.RequireItemId);
             if (CardObject.RequireItemValue > box.Count) throw new Exception("count mismatch");
 
             //Console.WriteLine($"[UseBundleBox] 请求参数 - ISN: {req.Isn}, 数量: {req.Count}");

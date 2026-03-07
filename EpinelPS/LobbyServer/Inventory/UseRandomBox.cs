@@ -14,7 +14,7 @@ namespace EpinelPS.LobbyServer.Inventory
 
             ResUseRandomBox response = new();
 
-            ItemData box = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ?? throw new InvalidDataException("cannot find box with isn " + req.Isn);
+            DbItemData box = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ?? throw new InvalidDataException("cannot find box with isn " + req.Isn);
             
             ItemConsumeRecord? cItem = GameData.Instance.ConsumableItems.Where(x => x.Value.Id == box.ItemType).FirstOrDefault().Value ?? throw new Exception("cannot find item Id " + box.ItemType);
             int usefragcost = cItem.UseFragCost;

@@ -14,7 +14,7 @@ namespace EpinelPS.LobbyServer.Inventory
             ReqOpenProfileRandomBox req = await ReadData<ReqOpenProfileRandomBox>();
             User user = GetUser();
             ResOpenProfileRandomBox response = new();
-            ItemData box = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ??
+            DbItemData box = user.Items.Where(x => x.Isn == req.Isn).FirstOrDefault() ??
                            throw new InvalidDataException("cannot find box with isn " + req.Isn);
             ItemConsumeRecord? cItem =
                 GameData.Instance.ConsumableItems.Where(x => x.Value.Id == box.ItemType).FirstOrDefault().Value ??
