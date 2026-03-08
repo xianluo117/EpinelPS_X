@@ -54,6 +54,8 @@ namespace EpinelPS.LobbyServer.Shop
                 }
             }*/
 
+            Logging.WriteLine($"初次商店数{netShopDatas.Count}.");
+
             response.Shops.AddRange(netShopDatas);
 
             JsonDb.Save();

@@ -22,6 +22,10 @@ namespace EpinelPS.Database
             {
                 SqliteQueryHelper.InitializeDatabase();
             }
+            else
+            {
+                SqliteQueryHelper.InitializeDatabase();
+            }
 
             var text = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "/db.json");
             if (text.Contains("Char_Premium_Ticket"))

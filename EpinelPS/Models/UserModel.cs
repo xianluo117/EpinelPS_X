@@ -151,7 +151,7 @@ public class User
 
     //shop
     public Dictionary<int, ShopBuyCountData> ShopBuyCountInfo = []; // key: eventId
-    public CurrentShopDate CurrentShopDate = new ();
+    //public CurrentShopDate CurrentShopDate = new ();
 
     public TriggerModel AddTrigger(Trigger type, int value, int conditionId = 0)
     {

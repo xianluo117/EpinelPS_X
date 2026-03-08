@@ -32,7 +32,6 @@ namespace EpinelPS.LobbyServer.Shop
             foreach (var item in req.Products)
             {
                 ShopHelper.UpCount(user, req.ShopCategory, item.ShopProductTid, item.Quantity);
-                ShopHelper.UpCountSql(req.ShopCategory, item.ShopProductTid, item.Quantity);
             }
 
             user.AddTrigger(Trigger.MainShopBuy, req.Products.Count);

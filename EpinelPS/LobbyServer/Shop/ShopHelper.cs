@@ -171,12 +171,20 @@ public class ShopHelper
     public static void LoadShopDate()
     {
         _shopDateCache = new ConcurrentDictionary<int, ShopDate>();
+
+        _connection = new SqliteConnection($"Data Source={adbPath}");
+        _connection.Open();
+
         using var command = _connection.CreateCommand();
         command.CommandText = "SELECT * FROM ShopDate";
 
         using var reader = command.ExecuteReader();
+
+        Logging.WriteLine($"[debug] 获取数据库是否有数据{reader.HasRows}");
         while (reader.Read())
         {
+            Logging.WriteLine($"[debug] 数据库数据{reader.GetInt32(0)}，{reader.GetInt32(1)}");
+
             var info = new ShopDate
             {
                 ShopCategory = reader.GetInt32(0),
@@ -185,10 +193,15 @@ public class ShopHelper
 
             _shopDateCache[info.ShopCategory] = info;
         }
+
+        Logging.WriteLine($"[debug] 数据库数据{_shopDateCache}");
     }
 
     public static void SaveShopDate(ShopDate info)
     {
+        _connection = new SqliteConnection($"Data Source={adbPath}");
+        _connection.Open();
+
         using var command = _connection.CreateCommand();
         command.CommandText = @"
         INSERT OR REPLACE INTO ShopDate (ShopCategory, LastDay) 
@@ -203,6 +216,9 @@ public class ShopHelper
     public static Dictionary<int, List<CurrentShopInfo>> GetCurrentShopInfo()
     {
         var result = new Dictionary<int, List<CurrentShopInfo>>();
+
+        _connection = new SqliteConnection($"Data Source={adbPath}");
+        _connection.Open();
 
         using var command = _connection.CreateCommand();
         command.CommandText = "SELECT * FROM CurrentShopInfo ORDER BY ShopCategory";
@@ -227,11 +243,10 @@ public class ShopHelper
                 ProductId = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                 ProductOrder = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
                 BuyLimitCount = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
-                BuyCount = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
-                CorporationType = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
-                Discount = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
-                EndAt = reader.IsDBNull(13) ? 0 : reader.GetInt64(13),
-                UseDateCondition = reader.IsDBNull(14) ? false : reader.GetBoolean(14)
+                CorporationType = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                Discount = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                EndAt = reader.IsDBNull(12) ? 0 : reader.GetInt64(12),
+                UseDateCondition = reader.IsDBNull(13) ? false : reader.GetBoolean(13)
             };
 
             // 按ShopCategory分组
@@ -249,6 +264,8 @@ public class ShopHelper
     public static CurrentShopInfo GetCurrentShopInfo(int shopCategory,int productId)
     {
         var result = new CurrentShopInfo();
+        _connection = new SqliteConnection($"Data Source={adbPath}");
+        _connection.Open();
 
         using var command = _connection.CreateCommand();
         command.CommandText = "SELECT * FROM CurrentShopInfo WHERE ShopCategory = @shopCategory AND ProductId = @productId";
@@ -274,11 +291,10 @@ public class ShopHelper
                 ProductId = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                 ProductOrder = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
                 BuyLimitCount = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
-                BuyCount = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
-                CorporationType = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
-                Discount = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
-                EndAt = reader.IsDBNull(13) ? 0 : reader.GetInt64(13),
-                UseDateCondition = reader.IsDBNull(14) ? false : reader.GetBoolean(14)
+                CorporationType = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                Discount = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                EndAt = reader.IsDBNull(12) ? 0 : reader.GetInt64(12),
+                UseDateCondition = reader.IsDBNull(13) ? false : reader.GetBoolean(13)
             };
 
             result = shopInfo;
@@ -290,17 +306,19 @@ public class ShopHelper
 
     public static void SaveShopInfo(CurrentShopInfo shopInfo)
     {
+        _connection = new SqliteConnection($"Data Source={adbPath}");
+        _connection.Open();
         using var command = _connection.CreateCommand();
         command.CommandText = @"
             INSERT INTO CurrentShopInfo (
                 ShopCategory, ShopTid, RenewCount, RenewAt, 
                 NextRenewAt, FreeRenewCount, ProductId, ProductOrder, 
-                BuyLimitCount, BuyCount, CorporationType, Discount, 
+                BuyLimitCount, CorporationType, Discount, 
                 EndAt, UseDateCondition
             ) VALUES (
                 @ShopCategory, @ShopTid, @RenewCount, @RenewAt,
                 @NextRenewAt, @FreeRenewCount, @ProductId, @ProductOrder,
-                @BuyLimitCount, @BuyCount, @CorporationType, @Discount,
+                @BuyLimitCount, @CorporationType, @Discount,
                 @EndAt, @UseDateCondition
             )";
 
@@ -314,7 +332,6 @@ public class ShopHelper
         command.Parameters.AddWithValue("@ProductId", shopInfo.ProductId);
         command.Parameters.AddWithValue("@ProductOrder", shopInfo.ProductOrder);
         command.Parameters.AddWithValue("@BuyLimitCount", shopInfo.BuyLimitCount);
-        command.Parameters.AddWithValue("@BuyCount", shopInfo.BuyCount);
         command.Parameters.AddWithValue("@CorporationType", shopInfo.CorporationType);
         command.Parameters.AddWithValue("@Discount", shopInfo.Discount);
         command.Parameters.AddWithValue("@EndAt", shopInfo.EndAt);
@@ -324,6 +341,8 @@ public class ShopHelper
 
     public static void ClearCurrentShopInfo()
     {
+        _connection = new SqliteConnection($"Data Source={adbPath}");
+        _connection.Open();
         using var command = _connection.CreateCommand();
         command.CommandText = "DELETE FROM CurrentShopInfo";
         command.ExecuteNonQuery();
@@ -331,6 +350,8 @@ public class ShopHelper
 
     public static int DeleteCurrentShopInfoByCategory(int shopCategory)
     {
+        _connection = new SqliteConnection($"Data Source={adbPath}");
+        _connection.Open();
         using var command = _connection.CreateCommand();
         command.CommandText = "DELETE FROM CurrentShopInfo WHERE ShopCategory = @shopCategory";
         command.Parameters.AddWithValue("@shopCategory", shopCategory);
@@ -370,7 +391,6 @@ public class ShopHelper
             cinfo.RenewCount = tShopProductData.RenewCount;
             cinfo.ProductId = product.ProductId;
             cinfo.ProductOrder = product.Order;
-            cinfo.BuyCount = product.BuyCount;
             cinfo.BuyLimitCount = product.BuyLimitCount;
             cinfo.CorporationType = product.CorporationType;
             cinfo.Discount = product.Discount;
@@ -417,7 +437,6 @@ public class ShopHelper
                     cinfo.RenewCount = tShopProductData.RenewCount;
                     cinfo.ProductId = product.ProductId;
                     cinfo.ProductOrder = product.Order;
-                    cinfo.BuyCount = product.BuyCount;
                     cinfo.BuyLimitCount = product.BuyLimitCount;
                     cinfo.CorporationType = product.CorporationType;
                     cinfo.Discount = product.Discount;
@@ -438,10 +457,21 @@ public class ShopHelper
                 {
                     if (allinfo.ContainsKey(shopCategory))
                     {
+                       
+
                         Console.WriteLine($"分类 {shopCategory} 有 {allinfo[shopCategory].Count} 条数据");
                         List<NetShopProductInfoData> tempList = new List<NetShopProductInfoData>();
                         foreach (var item in allinfo[shopCategory])
                         {
+
+                            int buycount = 0;
+                            
+                            if (GetBuyCount(user,shopCategory,item.ProductId)>0)
+                            {
+                                buycount = GetBuyCount(user, shopCategory, item.ProductId);
+                            }
+                            
+
                             tShopProductData.ShopTid = item.ShopTid;
                             tShopProductData.ShopCategory = item.ShopCategory;
                             tShopProductData.RenewAt = item.RenewAt;
@@ -454,7 +484,7 @@ public class ShopHelper
                                 Order = item.ProductOrder,
                                 ProductId = item.ProductId,
                                 BuyLimitCount = item.BuyLimitCount,
-                                BuyCount = item.BuyCount,
+                                BuyCount = buycount,
                                 Discount = item.Discount,
                                 CorporationType = item.CorporationType,
                                 EndAt = item.EndAt,
@@ -494,9 +524,7 @@ public class ShopHelper
                 cinfo.FreeRenewCount = tShopProductData.FreeRenewCount;
                 cinfo.RenewCount = tShopProductData.RenewCount;
                 cinfo.ProductId = product.ProductId;
-                cinfo.ProductOrder = product.Order;
-                cinfo.BuyCount = product.BuyCount;
-                cinfo.BuyLimitCount = product.BuyLimitCount;
+                cinfo.ProductOrder = product.Order; cinfo.BuyLimitCount = product.BuyLimitCount;
                 cinfo.CorporationType = product.CorporationType;
                 cinfo.Discount = product.Discount;
                 cinfo.EndAt = product.EndAt;
@@ -510,11 +538,34 @@ public class ShopHelper
 
     }
 
+    public static int GetBuyCount(User user, int shopCate, int productId)
+    {
+        int dateDay = user.GetDateDay();
+
+        var userBuyCounts = new List<EventShopProductData>();
+        if (user.ShopBuyCountInfo.TryGetValue(shopCate, out var userBuyCountInfo))
+        {
+            userBuyCounts = userBuyCountInfo.datas;
+            int buyCount = 0;
+            if (userBuyCountInfo.LastDay == dateDay)
+            {
+                buyCount = userBuyCounts.FirstOrDefault(x => x.ProductTid == productId)?.BuyCount ?? 0;
+            }
+
+            return buyCount;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
     public static List<NetShopProductData> LoadCurShop(int dateDay, User user, List<ContentsShopRecord> shoplist)
     {
         List<NetShopProductData> netShopDatas = new();
         LoadShopDate();
-        if (_shopDateCache.TryGetValue(0, out ShopDate? info))
+
+        if (_shopDateCache.TryGetValue(1, out ShopDate? info))
         {
             if (info.LastDay != dateDay)
             {
@@ -544,7 +595,6 @@ public class ShopHelper
                         cinfo.RenewCount = tShopProductData.RenewCount;
                         cinfo.ProductId = product.ProductId;
                         cinfo.ProductOrder = product.Order;
-                        cinfo.BuyCount = product.BuyCount;
                         cinfo.BuyLimitCount = product.BuyLimitCount;
                         cinfo.CorporationType = product.CorporationType;
                         cinfo.Discount = product.Discount;
@@ -565,11 +615,19 @@ public class ShopHelper
                 {
                     foreach (var category in allinfo.Keys)
                     {
+                       
+
                         Console.WriteLine($"分类 {category} 有 {allinfo[category].Count} 条数据");
                         NetShopProductData tShopProductData = new NetShopProductData();
                         List<NetShopProductInfoData> tempList = new List<NetShopProductInfoData>();
                         foreach (var item in allinfo[category])
                         {
+                            int buycount = 0;
+                            if (GetBuyCount(user, category,item.ProductId)>0)
+                            {
+                                buycount = GetBuyCount(user, category, item.ProductId);
+                            }
+
                             tShopProductData.ShopTid = item.ShopTid;
                             tShopProductData.ShopCategory = item.ShopCategory;
                             tShopProductData.RenewAt = item.RenewAt;
@@ -581,7 +639,7 @@ public class ShopHelper
                                 Order = item.ProductOrder,
                                 ProductId = item.ProductId,
                                 BuyLimitCount = item.BuyLimitCount,
-                                BuyCount = item.BuyCount,
+                                BuyCount = buycount,
                                 Discount = item.Discount,
                                 CorporationType = item.CorporationType,
                                 EndAt = item.EndAt,
@@ -599,6 +657,8 @@ public class ShopHelper
         }
         else
         {
+
+            Logging.WriteLine($"不存在信息，读取{shoplist.Count}条数据",LogType.Warning);
             ClearCurrentShopInfo();
             foreach (var shop in shoplist)
             {
@@ -612,6 +672,8 @@ public class ShopHelper
                 GetInfoData(user, shop.Id, ref tShopProductData, shop.BundleId);
                 SaveShopDate(new() { LastDay = dateDay, ShopCategory = tShopProductData.ShopCategory });
                 var productlist = tShopProductData.List.ToList();
+
+                Logging.WriteLine($"商品信息{productlist.Count}条。");
                 foreach (var product in productlist)
                 {
                     CurrentShopInfo cinfo = new CurrentShopInfo();
@@ -623,7 +685,6 @@ public class ShopHelper
                     cinfo.RenewCount = tShopProductData.RenewCount;
                     cinfo.ProductId = product.ProductId;
                     cinfo.ProductOrder = product.Order;
-                    cinfo.BuyCount = product.BuyCount;
                     cinfo.BuyLimitCount = product.BuyLimitCount;
                     cinfo.CorporationType = product.CorporationType;
                     cinfo.Discount = product.Discount;
@@ -633,41 +694,14 @@ public class ShopHelper
                 }
 
                 netShopDatas.Add(tShopProductData);
-                user.CurrentShopDate.ShopProduct.TryAdd(tShopProductData.ShopCategory, tShopProductData);
+                //user.CurrentShopDate.ShopProduct.TryAdd(tShopProductData.ShopCategory, tShopProductData);
             }
 
             return netShopDatas;
         }
     }
 
-    public static void UpCountSql(int shopCategory, int shopProductTid, int count)
-    {
-
-        LoadShopDate();
-        int dateDay = GetDay();
-        if (_shopDateCache.TryGetValue(shopCategory, out ShopDate? info))
-        {
-            var proinfo = GetCurrentShopInfo(shopCategory, shopProductTid);
-            if (proinfo.BuyCount <= 0)
-            {
-                proinfo.BuyCount = count;
-                SaveShopInfo(proinfo);
-            }
-            else if (info.LastDay == dateDay)
-            {
-                // 记录存在且是今天：累加
-                proinfo.BuyCount += count;
-                SaveShopInfo(proinfo);
-            }
-            else
-            {
-
-                proinfo.BuyCount = count;
-                SaveShopInfo(proinfo);
-            }
-        }
-    }
-
+   
     public static void UpCount(User user, int shopCategory, int shopProductTid, int count)
     {
         var userBuyCounts = new List<EventShopProductData>();
@@ -729,7 +763,7 @@ public class ShopHelper
         var userBuyCounts = new List<EventShopProductData>();
         List<ContentsShopProductRecord> fanilproducts = SelectRandomItems(products);
 
-
+        Logging.WriteLine($"商品类别{ShopCategory}，获取商品信息{fanilproducts.Count}条");
 
 
         if (user.ShopBuyCountInfo.TryGetValue(ShopCategory, out var userBuyCountInfo))
@@ -744,14 +778,18 @@ public class ShopHelper
                 }
 
 
-                tempList.Add(new NetShopProductInfoData()
+                NetShopProductInfoData info = new()
                 {
                     Order = csp.ProductOrder,
                     ProductId = csp.Id,
                     BuyLimitCount = csp.BuyLimitCount,
                     BuyCount = buyCount,
                     Discount = CalculateDiscounted(csp.DiscountProbId)
-                });
+                };
+
+                tempList.Add(info);
+
+                Logging.WriteLine($"商品行数据{info}:{info.ProductId},{info.Order},{info.BuyCount},{info.BuyLimitCount}，{info.Discount}。");
             }
         }
         else
@@ -759,14 +797,21 @@ public class ShopHelper
             foreach (var csp in fanilproducts)
             {
                 int buyCount = 0;
-                tempList.Add(new NetShopProductInfoData()
+
+
+
+                NetShopProductInfoData info = new()
                 {
                     Order = csp.ProductOrder,
                     ProductId = csp.Id,
                     BuyLimitCount = csp.BuyLimitCount,
                     BuyCount = buyCount,
                     Discount = CalculateDiscounted(csp.DiscountProbId)
-                });
+                };
+
+                Logging.WriteLine($"商品行数据{info}:{info.ProductId},{info.Order},{info.BuyCount},{info.BuyLimitCount}，{info.Discount}。");
+
+                tempList.Add(info);
             }
         }
 
@@ -1268,9 +1313,12 @@ public class ShopHelper
 
         int shopCategory = (int)shop.ShopCategory;
 
-        var product = user.CurrentShopDate?.ShopProduct?.GetValueOrDefault(shopCategory)?.List
-            ?.Where(dd => dd.ProductId == sp.GoodsId)
-            .FirstOrDefault();
+        var product = GetCurrentShopInfo(shopCategory, sp.GoodsId);
+
+
+       // var product = user.CurrentShopDate?.ShopProduct?.GetValueOrDefault(shopCategory)?.List
+       //    ?.Where(dd => dd.ProductId == sp.GoodsId)
+       //   .FirstOrDefault();
 
         if (product == null)
         {

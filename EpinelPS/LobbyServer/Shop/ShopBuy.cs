@@ -24,7 +24,6 @@ namespace EpinelPS.LobbyServer.Shop
             {
                 response = ShopHelper.BuyShopProduct(user, req);
                 ShopHelper.UpCount(user,req.ShopCategory,req.ShopProductTid,req.Quantity);
-                ShopHelper.UpCountSql(req.ShopCategory, req.ShopProductTid, req.Quantity);
                 response.Result = ShopBuyProductResult.Success;
             }
             catch (Exception ex)

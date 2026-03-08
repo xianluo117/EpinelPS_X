@@ -36,7 +36,6 @@ namespace EpinelPS.Database
             public int ProductId { get; set; }
             public int ProductOrder { get; set; }
             public int BuyLimitCount { get; set; }
-            public int BuyCount { get; set; }
             public int CorporationType { get; set; }
             public int Discount { get; set; }
             public long EndAt { get; set; }
@@ -83,13 +82,12 @@ namespace EpinelPS.Database
                     FreeRenewCount INTEGER,            -- 免费刷新次数
                     ProductId INTEGER,                 -- 商品ID
                     ProductOrder INTEGER,              -- 商品排序
-                    BuyLimitCount INTEGER,             -- 购买限制次数
-                    BuyCount INTEGER,                  -- 已购买次数
+                    BuyLimitCount INTEGER,             -- 购买限制次数                    
                     CorporationType INTEGER,           -- 公司类型
                     Discount INTEGER,                  -- 折扣
                     EndAt INTEGER,                     -- 结束时间
-                    UseDateCondition BOOLEAN,          -- 是否使用日期条件
-                    PRIMARY KEY (Id)
+                    UseDateCondition BOOLEAN
+                    
             );
             CREATE TABLE IF NOT EXISTS ShopDate (
                     ShopCategory INTEGER NOT NULL,           -- 商店类别
