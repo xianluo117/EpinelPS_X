@@ -1,0 +1,932 @@
+@model EpinelPS.Models.Admin.ModUserModel
+
+@{
+    ViewData["Title"] = "修改用户";
+}
+
+<div class="nikke-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4 mb-0" data-i18n="users.modify.title">修改用户信息</h1>
+        <a asp-action="Index" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-2"></i> <span data-i18n="users.modify.backToList">返回列表</span>
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0" data-i18n="users.modify.subtitle">用户信息</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Modify">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Username" class="form-label" data-i18n="users.table.username">用户名</label>
+                                    <input asp-for="Username" class="form-control" />
+                                    <span asp-validation-for="Username" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Nickname" class="form-label" data-i18n="users.table.nickname">昵称</label>
+                                    <input asp-for="Nickname" class="form-control" />
+                                    <span asp-validation-for="Nickname" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="nikke-checkbox-group">
+                                    <div class="nikke-checkbox mb-2">
+                                        <input asp-for="IsAdmin" class="nikke-checkbox-input" />
+                                        <label asp-for="IsAdmin" class="nikke-checkbox-label" data-i18n="users.modify.isAdmin">管理员权限</label>
+                                        <span asp-validation-for="IsAdmin" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="nikke-checkbox mb-2">
+                                        <input asp-for="sickpulls" class="nikke-checkbox-input" data-i18n-title="users.modify.disableGachaHint" />
+                                        <label asp-for="sickpulls" class="nikke-checkbox-label" data-i18n="users.modify.disableGacha" data-i18n-title="users.modify.disableGachaHint">禁用抽卡系统</label>
+                                        <span asp-validation-for="sickpulls" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="nikke-checkbox">
+                                        <input asp-for="IsBanned" class="nikke-checkbox-input" />
+                                        <label asp-for="IsBanned" class="nikke-checkbox-label" data-i18n="users.modify.isBanned">禁止登录</label>
+                                        <span asp-validation-for="IsBanned" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary" data-i18n="common.save">
+                                <i class="fas fa-save me-2"></i> 保存
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0" data-i18n="users.modify.cheats">作弊功能</h3>
+                </div>
+                <div class="card-body">
+                    <div class="cheats-section mb-4">
+                        <h4 class="section-title" data-i18n="users.modify.campaign">战役</h4>
+                        <div class="button-group">
+                            <button class="btn btn-accent" onclick="runSimpleCmdWithPr('completestage', '@Model.ID', 'Enter chapter number and stage number seperated by -')">
+                                <i class="fas fa-forward me-2"></i> <span data-i18n="users.modify.skipStages">跳过关卡</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="cheats-section mb-4">
+                        <h4 class="section-title" data-i18n="users.modify.characters">角色</h4>
+                        <div class="button-group">
+                            <button class="btn btn-accent" onclick="runSimpleCmd('addallcharacters', '@Model.ID')">
+                                <i class="fas fa-users me-2"></i> <span data-i18n="users.modify.addAllChars">添加所有角色</span>
+                            </button>
+                            <button class="btn btn-accent" onclick="runSimpleCmdWithPr('AddCharacter', '@Model.ID', 'Enter character ID. Wrong ID may cause game not to boot.')">
+                                <i class="fas fa-user-plus me-2"></i> <span data-i18n="users.modify.addChar">添加角色</span>
+                            </button>
+                            <button class="btn btn-accent" onclick="runSimpleCmdWithPr('SetLevel', '@Model.ID', 'Enter level (1-999) to apply to all characters')">
+                                <i class="fas fa-level-up-alt me-2"></i> <span data-i18n="users.modify.setCharLevels">设置角色等级</span>
+                            </button>
+                            <button class="btn btn-accent" onclick="runSimpleCmdWithPr('SetSkillLevel', '@Model.ID', 'Enter skill level (1-10) to apply to all characters')">
+                                <i class="fas fa-bolt me-2"></i> <span data-i18n="users.modify.setSkillLevels">设置技能等级</span>
+                            </button>
+                            <button class="btn btn-accent" onclick="runSimpleCmdWithPr('SetCoreLevel', '@Model.ID', 'core level / 0-3 sets stars')">
+                                <i class="fas fa-star me-2"></i> <span data-i18n="users.modify.setCoreLevel">设置核心等级</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="cheats-section mb-4">
+                        <h4 class="section-title" data-i18n="users.modify.inventory">物品</h4>
+                        <div class="button-group">
+                            <button class="btn btn-accent" onclick="runSimpleCmdWithPr('addallmaterials', '@Model.ID', 'Enter material amount:')">
+                                <i class="fas fa-tools me-2"></i> <span data-i18n="users.modify.addAllEquip">添加所有装备</span>
+                            </button>
+                           
+                            <button class="btn btn-accent" onclick="showCustomAddItemDialog('@Model.ID')">
+                                <i class="fas fa-box-open me-2"></i> <span data-i18n="users.modify.addItem">添加物品</span>
+                            </button>
+                            
+                            @*<button class="btn btn-accent" onclick="runSimpleCmdWithPr('AddItem', '@Model.ID', 'Enter item ID and amount seperated by -')">
+                                <i class="fas fa-box-open me-2"></i> <span data-i18n="users.modify.addItem">添加物品</span>
+                            </button>*@
+                        </div>
+                    </div>
+
+                    <div class="cheats-section">
+                        <h4 class="section-title" data-i18n="users.modify.misc">其他</h4>
+                        <div class="button-group">
+                            <button class="btn btn-accent" onclick="runSimpleCmd('finishalltutorials', '@Model.ID')">
+                                <i class="fas fa-graduation-cap me-2"></i> <span data-i18n="users.modify.finishTutorials">完成所有教程</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="addItemModal" class="nikke-modal">
+    <div class="nikke-modal-content">
+        <div class="nikke-modal-header">
+            <h3 data-i18n="users.modify.addItem">添加物品</h3>
+            <button class="nikke-modal-close" onclick="hideCustomAddItemDialog()">&times;</button>
+        </div>
+        <div class="nikke-modal-body">
+            <!-- 添加ID直接输入选项 -->
+            <div class="nikke-modal-form-group">
+                <label class="nikke-modal-form-label">输入方式</label>
+                <div class="input-mode-selector">
+                    <label class="radio-label">
+                        <input type="radio" name="inputMode" value="csv" checked onchange="toggleInputMode()">
+                        <span>从CSV选择</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inputMode" value="manual" onchange="toggleInputMode()">
+                        <span>手动输入ID</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- CSV选择模式 -->
+            <div id="csvModeSection">
+                <div class="nikke-modal-form-group">
+                    <label class="nikke-modal-form-label">选择物品类别</label>
+                    <select id="csvFileSelector" class="nikke-modal-form-select" onchange="loadItemsFromCSV()">
+                        <option value="">请选择物品类型</option>
+                        <option value="/data/ConsumeTable.csv">礼包</option>
+                        <option value="/data/PieceTable.csv">妮姬碎片</option>
+                        <option value="/data/MaterialTable.csv">材料</option>
+                        <!-- 可以根据需要添加更多文件选项 -->
+                    </select>
+                </div>
+
+                <div id="loadingSection" class="loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>正在加载物品数据...</p>
+                </div>
+
+                <div id="itemSelectionSection" style="display: none;">
+                    <div class="nikke-modal-form-group">
+                        <label class="nikke-modal-form-label">选择物品</label>
+                        <select id="itemSelector" class="nikke-modal-form-select" onchange="updateItemInfo()">
+                            <option value="">请选择物品...</option>
+                        </select>
+                    </div>
+
+                    <div id="itemInfo" class="item-info" style="display: none;">
+                        <p><strong>物品ID:</strong> <span id="itemIdDisplay"></span></p>
+                        <p><strong>物品名称:</strong> <span id="itemNameDisplay"></span></p>
+                        <p><strong>物品说明:</strong> <span id="itemDescriptionDisplay"></span></p>
+                        <p><strong>最大堆叠:</strong> <span id="itemStackMaxDisplay"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手动输入ID模式 -->
+            <div id="manualModeSection" style="display: none;">
+                <div class="nikke-modal-form-group">
+                    <label class="nikke-modal-form-label">物品ID</label>
+                    <input type="text" id="manualItemId" class="nikke-modal-form-input"
+                           placeholder="请输入物品ID" oninput="validateManualInput()">
+                </div>
+                <div id="manualItemInfo" class="item-info" style="display: none;">
+                    <p><strong>物品ID:</strong> <span id="manualItemIdDisplay"></span></p>
+                    <p class="text-muted">手动输入模式，无法显示物品详情</p>
+                </div>
+            </div>
+
+            <!-- 数量输入（共用） -->
+            <div class="nikke-modal-form-group">
+                <label class="nikke-modal-form-label" data-i18n="users.modify.itemAmount">数量</label>
+                <input type="number" id="customItemAmount" class="nikke-modal-form-input"
+                       placeholder="输入数量" value="1" min="1">
+            </div>
+
+            <div id="errorSection" class="text-danger" style="display: none;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span>加载物品数据失败，请重试或检查文件路径</span>
+            </div>
+        </div>
+        <div class="nikke-modal-footer">
+            <button class="btn btn-outline-light" onclick="hideCustomAddItemDialog()" data-i18n="common.cancel">取消</button>
+            <button class="btn btn-primary" onclick="confirmCustomAddItem()" data-i18n="common.confirm">确认</button>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    /* 首先确保所有CSS变量都被正确定义 */
+    :root {
+        --nikke-primary: #e83e8c; /* 粉色 */
+        --nikke-accent: #ff6b9d; /* 亮粉色 */
+        --nikke-accent-dark: #d81b60; /* 深粉色 - 这是关键变量 */
+        --nikke-dark: #1a1a2e; /* 深蓝黑 */
+        --nikke-dark-light: #2a2a3e; /* 稍亮的深色 */
+        --nikke-light: #ffffff; /* 白色 */
+        --nikke-gray: #4a4a5e; /* 灰色 */
+        --nikke-gray-light: #6a6a7e; /* 浅灰色 */
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --transition-fast: 0.2s ease;
+    }
+
+    /* NIKKE风格卡片标题 */
+    .card-header {
+        background-color: var(--nikke-primary);
+        color: var(--nikke-light);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 15px 20px;
+    }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+    /* 作弊功能部分 */
+    .cheats-section {
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        color: var(--nikke-accent);
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 1px;
+        border-bottom: 1px solid var(--nikke-gray);
+        padding-bottom: 8px;
+    }
+
+    .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* 自定义按钮 - 修复版 */
+    .btn-accent {
+        background-color: var(--nikke-accent-dark) !important;
+        color: white !important;
+        border: none !important;
+        transition: all var(--transition-fast) !important;
+    }
+
+        .btn-accent:hover {
+            background-color: var(--nikke-accent) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(232, 62, 140, 0.4);
+            color: white !important;
+        }
+
+    /* 模态框按钮样式 */
+    .nikke-modal-footer .btn-primary {
+        background-color: var(--nikke-primary) !important;
+        color: var(--nikke-light) !important;
+        border: 1px solid var(--nikke-primary) !important;
+    }
+
+        .nikke-modal-footer .btn-primary:hover {
+            background-color: var(--nikke-accent) !important;
+            border-color: var(--nikke-accent) !important;
+        }
+
+    .nikke-modal-footer .btn-outline-light {
+        background-color: transparent !important;
+        color: var(--nikke-light) !important;
+        border: 1px solid var(--nikke-light) !important;
+    }
+
+        .nikke-modal-footer .btn-outline-light:hover {
+            background-color: var(--nikke-light) !important;
+            color: var(--nikke-dark) !important;
+        }
+
+    /* 自定义复选框样式 */
+    .nikke-checkbox-group {
+        margin-top: 10px;
+    }
+
+    .nikke-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0;
+    }
+
+    .nikke-checkbox-input {
+        position: absolute;
+        opacity: 0;
+        height: 0;
+        width: 0;
+    }
+
+    .nikke-checkbox-label {
+        position: relative;
+        padding-left: 30px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+        .nikke-checkbox-label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            background-color: var(--nikke-gray);
+            border: 1px solid var(--nikke-gray-light);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+    .nikke-checkbox-input:checked + .nikke-checkbox-label:before {
+        background-color: var(--nikke-accent);
+        border-color: var(--nikke-accent);
+    }
+
+    .nikke-checkbox-label:after {
+        content: '\f00c';
+        font-family: 'Font Awesome 5 Free', serif;
+        font-weight: 900;
+        position: absolute;
+        left: 3px;
+        top: 1px;
+        color: white;
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+        font-size: 14px;
+    }
+
+    .nikke-checkbox-input:checked + .nikke-checkbox-label:after {
+        opacity: 1;
+    }
+</style>
+
+
+
+<style>
+    /* 自定义模态框样式 - 匹配NIKKE主题 */
+    .nikke-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1050;
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        transition: opacity 0.3s ease-out;
+    }
+
+    .nikke-modal.show {
+        display: block;
+        opacity: 1;
+    }
+
+    .input-mode-selector {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .radio-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .radio-label input[type="radio"] {
+        margin: 0;
+    }
+
+    .nikke-modal-content {
+        position: relative;
+        background-color: var(--nikke-dark);
+        border: 1px solid var(--nikke-primary);
+        border-radius: var(--radius-md);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        max-width: 500px;
+        margin: 100px auto;
+        transform: translateY(-30px);
+        transition: transform 0.3s ease-out;
+    }
+
+    .nikke-modal.show .nikke-modal-content {
+        transform: translateY(0);
+    }
+
+    .nikke-modal-header {
+        background-color: var(--nikke-primary);
+        color: var(--nikke-light);
+        padding: 15px 20px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 1px;
+        border-top-left-radius: var(--radius-md);
+        border-top-right-radius: var(--radius-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .nikke-modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    .nikke-modal-close {
+        background: none;
+        border: none;
+        color: var(--nikke-light);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: color var(--transition-fast);
+    }
+
+    .nikke-modal-close:hover {
+        color: var(--nikke-accent);
+    }
+
+    .nikke-modal-body {
+        padding: 20px;
+    }
+
+    /* 修复模态框按钮样式 */
+    .nikke-modal-footer {
+        padding: 15px 20px;
+        background-color: var(--nikke-dark-light);
+        border-top: 1px solid var(--nikke-gray);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-bottom-left-radius: var(--radius-md);
+        border-bottom-right-radius: var(--radius-md);
+    }
+
+    /* 确保模态框内的按钮保持原有样式 */
+    .nikke-modal-footer .btn {
+        background-color: var(--nikke-primary) !important;
+        color: var(--nikke-light) !important;
+        border: 1px solid var(--nikke-primary) !important;
+    }
+
+    .nikke-modal-footer .btn:hover {
+        background-color: var(--nikke-accent) !important;
+        border-color: var(--nikke-accent) !important;
+    }
+
+    .nikke-modal-footer .btn-outline-light {
+        background-color: transparent !important;
+        color: var(--nikke-light) !important;
+        border: 1px solid var(--nikke-light) !important;
+    }
+
+    .nikke-modal-footer .btn-outline-light:hover {
+        background-color: var(--nikke-light) !important;
+        color: var(--nikke-dark) !important;
+    }
+
+
+    /* 表单样式 */
+    .nikke-modal-form-group {
+        margin-bottom: 15px;
+    }
+
+    .nikke-modal-form-label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--nikke-light);
+        font-weight: 500;
+    }
+
+    .nikke-modal-form-input {
+        width: 100%;
+        padding: 10px 12px;
+        background-color: var(--nikke-dark-light);
+        border: 1px solid var(--nikke-gray);
+        border-radius: var(--radius-sm);
+        color: var(--nikke-light);
+        transition: all var(--transition-fast);
+    }
+
+    .nikke-modal-form-input:focus {
+        outline: none;
+        border-color: var(--nikke-accent);
+        box-shadow: 0 0 0 2px rgba(232, 62, 140, 0.2);
+    }
+
+
+    .nikke-modal-form-select {
+        width: 100%;
+        padding: 10px 12px;
+        background-color: var(--nikke-dark); /* 保持原背景色 */
+        border: 1px solid var(--nikke-primary); /* 改为primary颜色边框 */
+        border-radius: var(--radius-sm);
+        color: var(--nikke-light);
+        transition: all var(--transition-fast);
+        /* 添加下拉箭头样式 */
+        appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%23ffffff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 16px;
+    }
+
+        /* 添加下拉选项样式 */
+        .nikke-modal-form-select option {
+            background-color: var(--nikke-dark);
+            color: var(--nikke-light);
+            padding: 8px;
+        }
+
+        /* 添加焦点状态 */
+        .nikke-modal-form-select:focus {
+            outline: none;
+            border-color: var(--nikke-accent);
+            box-shadow: 0 0 0 2px rgba(232, 62, 140, 0.2);
+        }
+</style>
+
+
+<script>
+    let currentUserId = '';
+    let itemsData = []; // 存储加载的物品数据
+
+    function showCustomAddItemDialog(userId) {
+        currentUserId = userId;
+        const modal = document.getElementById('addItemModal');
+        if (modal) {
+            // 重置表单
+            resetForm();
+
+            // 先显示模态框，然后添加show类来触发动画
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+    }
+
+    function hideCustomAddItemDialog() {
+        const modal = document.getElementById('addItemModal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('csvFileSelector').selectedIndex = 0;
+        document.getElementById('itemSelector').innerHTML = '<option value="">请选择物品...</option>';
+        document.getElementById('itemInfo').style.display = 'none';
+        document.getElementById('itemSelectionSection').style.display = 'none';
+        document.getElementById('loadingSection').style.display = 'none';
+        document.getElementById('errorSection').style.display = 'none';
+        document.getElementById('customItemAmount').value = '1';
+        itemsData = [];
+    }
+
+    async function loadItemsFromCSV() {
+        const fileSelector = document.getElementById('csvFileSelector');
+        const csvFile = fileSelector.value;
+
+        if (!csvFile) {
+            resetForm();
+            return;
+        }
+
+        // 显示加载状态
+        document.getElementById('loadingSection').style.display = 'block';
+        document.getElementById('itemSelectionSection').style.display = 'none';
+        document.getElementById('errorSection').style.display = 'none';
+
+        try {
+            // 使用fetch API加载CSV文件
+            const response = await fetch(csvFile);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const csvText = await response.text();
+            itemsData = parseCSV(csvText);
+
+            // 填充物品选择器
+            populateItemSelector(itemsData);
+
+            // 显示物品选择区域
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('itemSelectionSection').style.display = 'block';
+
+        } catch (error) {
+            console.error('加载CSV文件失败:', error);
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'block';
+        }
+    }
+
+        function parseCSV(csvText) {
+        const lines = [];
+        let currentLine = '';
+        let inQuotes = false;
+
+        // 第一步：正确分割包含换行符的字段
+        for (let i = 0; i < csvText.length; i++) {
+            const char = csvText[i];
+            const nextChar = csvText[i + 1];
+
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === '\n' && !inQuotes) {
+                lines.push(currentLine);
+                currentLine = '';
+                continue;
+            } else if (char === '\r' && nextChar === '\n' && !inQuotes) {
+                lines.push(currentLine);
+                currentLine = '';
+                i++; // 跳过下一个字符（\n）
+                continue;
+            } else if (char === '\r' && !inQuotes) {
+                lines.push(currentLine);
+                currentLine = '';
+                continue;
+            }
+
+            currentLine += char;
+        }
+
+        if (currentLine) {
+            lines.push(currentLine);
+        }
+
+        if (lines.length < 2) return [];
+
+        // 第二步：解析CSV标题行
+        const headers = parseCSVLine(lines[0]);
+
+        const items = [];
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const values = parseCSVLine(line);
+            const item = {};
+
+            // 将值映射到对应的标题
+            headers.forEach((header, index) => {
+                if (values[index] !== undefined) {
+                    item[header] = values[index].replace(/^"|"$/g, ''); // 移除引号
+                }
+            });
+
+            // 只添加有ID的物品
+            if (item.Id) {
+                items.push(item);
+            }
+        }
+
+        return items;
+    }
+
+    // 辅助函数：解析单行CSV数据
+    function parseCSVLine(line) {
+        const values = [];
+        let currentValue = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+
+            if (char === '"') {
+                if (inQuotes && line[i + 1] === '"') {
+                    // 处理转义引号 ""
+                    currentValue += '"';
+                    i++; // 跳过下一个引号
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                values.push(currentValue);
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+
+        values.push(currentValue);
+        return values;
+    }
+
+
+
+    function populateItemSelector(items) {
+        const selector = document.getElementById('itemSelector');
+        selector.innerHTML = '<option value="">请选择物品...</option>';
+
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.Id;
+            option.textContent = `${item.Id} - ${item.NameLocalkey || '未知物品'}`;
+            option.setAttribute('data-item', JSON.stringify(item));
+            selector.appendChild(option);
+        });
+    }
+
+    function updateItemInfo() {
+        const selector = document.getElementById('itemSelector');
+        const selectedOption = selector.options[selector.selectedIndex];
+        const itemInfo = document.getElementById('itemInfo');
+
+        if (selectedOption.value) {
+            const item = JSON.parse(selectedOption.getAttribute('data-item'));
+
+            document.getElementById('itemIdDisplay').textContent = item.Id || 'N/A';
+            document.getElementById('itemNameDisplay').textContent = item.NameLocalkey || '未知物品';
+            document.getElementById('itemDescriptionDisplay').textContent = item.DescriptionLocalkey || '无说明';
+            document.getElementById('itemStackMaxDisplay').textContent = item.StackMax || '无限制';
+
+            // 设置默认数量为1或最大堆叠数（如果较小）
+            const maxStack = parseInt(item.StackMax) || 9999;
+            document.getElementById('customItemAmount').max = maxStack;
+
+            itemInfo.style.display = 'block';
+        } else {
+            itemInfo.style.display = 'none';
+        }
+    }
+
+    // 点击模态框外部关闭
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('addItemModal');
+        if (event.target === modal) {
+            hideCustomAddItemDialog();
+        }
+    });
+
+    // 支持按ESC键关闭
+    document.addEventListener('keydown', function(event) {
+        const modal = document.getElementById('addItemModal');
+        if (event.key === 'Escape' && modal && modal.style.display === 'block') {
+            hideCustomAddItemDialog();
+        }
+    });
+
+         // 自定义NIKKE风格弹窗
+    function showNikkeAlert(message, type = "info") {
+        // 创建弹窗元素
+        const alertModal = document.createElement('div');
+        alertModal.className = 'nikke-modal';
+        alertModal.setAttribute('id', 'nikke-alert-modal'); // 添加ID以便查找
+        alertModal.innerHTML = `
+            <div class="nikke-modal-content" style="max-width: 400px;">
+                <div class="nikke-modal-header">
+                    <h3>${type === 'success' ? '操作成功' : '错误'}</h3>
+                    <button class="nikke-modal-close" onclick="closeNikkeAlert()">&times;</button>
+                </div>
+                <div class="nikke-modal-body">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"
+                           style="font-size: 3rem; color: ${type === 'success' ? '#4CAF50' : '#e83e8c'}; margin-bottom: 15px;"></i>
+                        <p>${message}</p>
+                    </div>
+                </div>
+                <div class="nikke-modal-footer">
+                    <button class="btn btn-primary" onclick="closeNikkeAlert()" style="margin: 0 auto;">确定</button>
+                </div>
+            </div>
+        `;
+
+        // 添加到页面
+        document.body.appendChild(alertModal);
+
+        // 显示弹窗
+        setTimeout(() => {
+            alertModal.classList.add('show');
+        }, 10);
+    }
+
+    // 关闭弹窗 - 修复版本
+    function closeNikkeAlert() {
+        const alertModal = document.getElementById('nikke-alert-modal');
+        if (alertModal) {
+            alertModal.classList.remove('show');
+            setTimeout(() => {
+                if (alertModal.parentNode) {
+                    document.body.removeChild(alertModal);
+                }
+            }, 300);
+        }
+    }
+
+
+    // 切换输入模式
+    function toggleInputMode() {
+        const mode = document.querySelector('input[name="inputMode"]:checked').value;
+        const csvSection = document.getElementById('csvModeSection');
+        const manualSection = document.getElementById('manualModeSection');
+
+        if (mode === 'csv') {
+            csvSection.style.display = 'block';
+            manualSection.style.display = 'none';
+            // 重置手动输入
+            document.getElementById('manualItemId').value = '';
+            document.getElementById('manualItemInfo').style.display = 'none';
+        } else {
+            csvSection.style.display = 'none';
+            manualSection.style.display = 'block';
+            // 重置CSV选择
+            document.getElementById('csvFileSelector').value = '';
+            document.getElementById('itemSelectionSection').style.display = 'none';
+            document.getElementById('itemInfo').style.display = 'none';
+        }
+    }
+
+    // 验证手动输入
+    function validateManualInput() {
+        const itemId = document.getElementById('manualItemId').value.trim();
+        const manualInfo = document.getElementById('manualItemInfo');
+        const manualIdDisplay = document.getElementById('manualItemIdDisplay');
+
+        if (itemId) {
+            manualIdDisplay.textContent = itemId;
+            manualInfo.style.display = 'block';
+        } else {
+            manualInfo.style.display = 'none';
+        }
+    }
+
+        function confirmCustomAddItem() {
+        const mode = document.querySelector('input[name="inputMode"]:checked').value;
+        let itemId;
+        let maxStack = 9999; // 默认最大堆叠数量
+
+        if (mode === 'csv') {
+            const selectedItem = document.getElementById('itemSelector').value;
+            if (!selectedItem) {
+                showNikkeAlert('请选择物品', 'error');
+                return;
+            }
+            itemId = selectedItem;
+
+            // 获取CSV模式下的最大堆叠数量
+            const stackMaxDisplay = document.getElementById('itemStackMaxDisplay').textContent;
+            if (stackMaxDisplay && !isNaN(stackMaxDisplay)) {
+                maxStack = parseInt(stackMaxDisplay);
+            }
+        } else {
+            itemId = document.getElementById('manualItemId').value.trim();
+            if (!itemId) {
+                showNikkeAlert('请输入物品ID', 'error');
+                return;
+            }
+            // 手动模式下使用默认的最大堆叠数量
+        }
+
+        const amount = parseInt(document.getElementById('customItemAmount').value);
+        if (!amount || amount < 1) {
+            showNikkeAlert('请输入有效的数量', 'error');
+            return;
+        }
+
+        // 添加最大堆叠数量验证
+        if (amount > maxStack) {
+            showNikkeAlert(`数量不能超过最大堆叠数量: ${maxStack}`, 'error');
+            return;
+        }
+
+        // 执行添加物品操作
+        runCmd('AddItem', function(json) {
+            if (json.ok) {
+                showNikkeAlert(`成功添加物品 ${itemId} x${amount}`, 'success');
+                //hideCustomAddItemDialog();
+            } else {
+                showNikkeAlert('错误: ' + json.error, 'error');
+            }
+        }, currentUserId, `${itemId}-${amount}`);
+    }
+</script>
+

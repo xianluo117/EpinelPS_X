@@ -1,0 +1,18 @@
+{
+  "Normal": {
+    "R": 10,
+    "SR": 40,
+    "SSR": 50,
+    "PilgrimRate": 4.55,
+    "IncreasedChance": 2.0,
+    "IncreasedChancePilgrim": 1.0
+  },
+  "EventDaily": {
+    "R": 10,
+    "SR": 40,
+    "SSR": 50,
+    "PilgrimRate": 4.55,
+    "IncreasedChance": 2.0,
+    "IncreasedChancePilgrim": 1.0
+  }
+}

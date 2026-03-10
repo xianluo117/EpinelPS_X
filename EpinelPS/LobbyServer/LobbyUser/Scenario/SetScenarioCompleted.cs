@@ -1,0 +1,32 @@
+﻿using EpinelPS.Database;
+using EpinelPS.Data;
+using EpinelPS.Utils;
+
+namespace EpinelPS.LobbyServer.LobbyUser.Scenario
+{
+    [PacketPath("/User/SetScenarioComplete")]
+    public class SetScenarioCompleted : LobbyMsgHandler
+    {
+        protected override async Task HandleAsync()
+        {
+            ReqSetScenarioComplete req = await ReadData<ReqSetScenarioComplete>();
+            User user = GetUser();
+
+            ResSetScenarioComplete response = new()
+            {
+                Reward = new NetRewardData()
+            };
+
+            user.CompletedScenarios.Add(req.ScenarioId);
+
+            if (GameData.Instance.ScenarioRewards.TryGetValue(req.ScenarioId, out ScenarioRewardsRecord? record))
+            {
+                response.Reward = RewardUtils.RegisterRewardsForUser(user, record.RewardId);
+            }
+
+            JsonDb.Save();
+
+            await WriteDataAsync(response);
+        }
+    }
+}
