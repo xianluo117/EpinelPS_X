@@ -1,5 +1,7 @@
 ﻿using EpinelPS.Data;
+using EpinelPS.Database;
 using EpinelPS.Utils;
+using System.Linq;
 
 namespace EpinelPS.LobbyServer.Shop.InApp
 {
@@ -16,25 +18,33 @@ namespace EpinelPS.LobbyServer.Shop.InApp
 
             DateTime now = DateTime.UtcNow;
 
-            /*GameData.Instance.InAppShopManagerRecords.Values
-                .Where(csp => csp.StartDate <= now && now <= csp.EndDate )
-                .Where(csp => csp.IsHideIfNotValid==true)
-                .OrderBy(csp => csp.OrderGroupId)
-                .ThenBy(csp => csp.Id)
-                .ToList()
-                .ForEach(csp =>
+            var pendingOrders = JsonDb.Instance.SimulatedPurchaseOrders.Values
+                .Where(order => order.UserId == UserId && !order.IsConsumed)
+                .ToList();
+
+            foreach (var order in pendingOrders)
+            {
+                int subTid = 0;
+                if (GameData.Instance.PackageListTable.TryGetValue(order.PackageListTableId, out PackageListRecord? packageList))
                 {
-                    response.DataList.Add(new NetInAppShopReceivableProductData()
+                    int packageShopId = packageList.PackageShopId;
+                    var shop = GameData.Instance.InAppShopManagerRecords.Values
+                        .FirstOrDefault(csp => csp.PackageShopId == packageShopId && csp.StartDate <= now && now <= csp.EndDate);
+                    if (shop != null)
                     {
-                        ProductId = csp.Id.ToString(),
-                        SubTid = csp.SubCategoryId
-                        
-                    });
+                        subTid = shop.SubCategoryId;
+                    }
+                }
 
-                });*/
-           
+                response.DataList.Add(new NetInAppShopReceivableProductData()
+                {
+                    ProductId = order.ProductId ?? string.Empty,
+                    Token = order.ReferenceId,
+                    SubTid = subTid
+                });
+            }
 
-            // TODO
+            Logging.WriteLine($"GetRetrivableProductList: user={UserId} pending={pendingOrders.Count} returned={response.DataList.Count}", LogType.Warning);
 
             await WriteDataAsync(response);
         }

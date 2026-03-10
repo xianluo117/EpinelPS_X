@@ -9,6 +9,16 @@ using Paseto.Builder;
 
 namespace EpinelPS.Models
 {
+    public class SimulatedPurchaseOrder
+    {
+        public string ReferenceId = string.Empty;
+        public string ProductId = string.Empty;
+        public int PackageListTableId;
+        public ulong UserId;
+        public bool IsConsumed;
+        public DateTime CreatedAtUtc = DateTime.UtcNow;
+    }
+
     public class AccessToken
     {
         public string Token = "";
@@ -101,7 +111,7 @@ namespace EpinelPS.Models
         public List<int> DailyMissionIdList = [];
         public int LastDay = 0; // yyyyMMdd
         public long LastDate = 0; // Default value for LastDate
-        public bool AllClear = false;//存储活动事件是否完成
+        public bool AllClear = false;//?洢???????????
     }
     // EventShopBuyCountData
     public class EventShopProductData

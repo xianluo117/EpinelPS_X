@@ -54,6 +54,13 @@ namespace EpinelPS
                                 listenOptions.UseHttps(AppDomain.CurrentDomain.BaseDirectory + @"site.pfx", "");
                             });
 
+                        // HTTP endpoint for local payment redirect
+                        serverOptions.Listen(IPAddress.Any, 8080,
+                            listenOptions =>
+                            {
+                                listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+                            });
+
                         // TODO
                         serverOptions.AllowSynchronousIO = true;
                     });
@@ -87,10 +94,12 @@ namespace EpinelPS
 
                     }
 
-                    app.UseHttpsRedirection();
+                    app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/payment"), appBuilder =>
+                    {
+                        appBuilder.UseHttpsRedirection();
+                    });
 
                     app.UseAuthorization();
-                    app.UseHttpsRedirection();
                     app.UseRouting();
                     app.MapControllerRoute(
                name: "default",

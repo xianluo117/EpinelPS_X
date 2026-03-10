@@ -7,6 +7,7 @@ namespace EpinelPS.Utils
     {
         public StaticData StaticDataMpk { get; set; } = new();
         public string ResourceBaseURL { get; set; } = "";
+        public string PaymentRedirectBaseUrl { get; set; } = "";
         public string GameMinVer { get; set; } = "";
         public string GameMaxVer { get; set; } = "";
         /// <summary>
